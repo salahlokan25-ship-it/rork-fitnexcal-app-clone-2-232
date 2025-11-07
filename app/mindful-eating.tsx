@@ -18,7 +18,22 @@ type WebAudio = {
   isPlaying: () => boolean;
 };
 
-const FITNESS_CALM_MUSIC_URL = 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Komiku/Relax/Komiku_-_04_-_Breathe.mp3';
+// Royalty-free tracks (Free Music Archive / public domain friendly sources)
+// These URLs permit streaming and are suitable for mindfulness sessions.
+const TRACKS = [
+  {
+    title: 'Breathe — Komiku (FMA)',
+    uri: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Komiku/Relax/Komiku_-_04_-_Breathe.mp3',
+  },
+  {
+    title: 'Calm and Peaceful — Bensound (Preview)',
+    uri: 'https://cdn.pixabay.com/download/audio/2023/02/23/audio_aa7f2f66e9.mp3?filename=calm-meditation-141316.mp3',
+  },
+  {
+    title: 'Ambient Peace — Lesfm (Pixabay)',
+    uri: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_0d2fa2e6e5.mp3?filename=relaxing-meditation-music-zen-111237.mp3',
+  },
+];
 
 const MINDFUL_TIPS = [
   'Notice the textures of your food.',
@@ -38,7 +53,8 @@ export default function MindfulEatingScreen() {
   const [totalSeconds] = useState<number>(20 * 60);
   const [remaining, setRemaining] = useState<number>(20 * 60);
   const [running, setRunning] = useState<boolean>(false);
-  const audioChoiceLabel = 'Fitness Calm';
+  const [trackIndex, setTrackIndex] = useState<number>(0);
+  const audioChoiceLabel = TRACKS[trackIndex]?.title ?? 'Mindful Audio';
   const [volume, setVolume] = useState<number>(0.6);
   const [showTip, setShowTip] = useState<boolean>(true);
   const [currentTip] = useState<string>(MINDFUL_TIPS[Math.floor(Math.random() * MINDFUL_TIPS.length)]);
@@ -84,7 +100,7 @@ export default function MindfulEatingScreen() {
 
   const ensureSoundLoaded = useCallback(async () => {
     try {
-      const uri = FITNESS_CALM_MUSIC_URL;
+      const uri = TRACKS[trackIndex]?.uri ?? TRACKS[0].uri;
       if (isWeb) {
         if (soundRef.current?.el) return soundRef.current as WebAudio;
         const wa = createWebAudio(uri);
@@ -117,7 +133,7 @@ export default function MindfulEatingScreen() {
       console.log('[MindfulEating] audio load error', e);
       return null;
     }
-  }, [volume, isWeb, createWebAudio]);
+  }, [volume, isWeb, createWebAudio, trackIndex]);
 
   const reloadTrack = useCallback(async () => {
     try {
@@ -245,8 +261,21 @@ export default function MindfulEatingScreen() {
     reloadTrack();
   }, [reloadTrack]);
 
+  // When track changes, reload
+  useEffect(() => {
+    reloadTrack();
+  }, [trackIndex, reloadTrack]);
+
   const toggleRun = useCallback(() => {
     setRunning((v) => !v);
+  }, []);
+
+  const nextTrack = useCallback(() => {
+    setTrackIndex((i) => (i + 1) % TRACKS.length);
+  }, []);
+
+  const prevTrack = useCallback(() => {
+    setTrackIndex((i) => (i - 1 + TRACKS.length) % TRACKS.length);
   }, []);
 
   const handleBack = useCallback(() => {
@@ -315,8 +344,16 @@ export default function MindfulEatingScreen() {
 
         <View style={styles.bottomSection}>
           <View style={styles.controlsSection}>
-            <View style={styles.singleTrackBadge}>
-              <Text style={styles.singleTrackText}>{audioChoiceLabel}</Text>
+            <View style={styles.trackRow}>
+              <TouchableOpacity accessibilityRole="button" onPress={prevTrack} style={styles.trackBtn} testID="track-prev">
+                <Text style={styles.trackBtnText}>{'◀︎'}</Text>
+              </TouchableOpacity>
+              <View style={styles.singleTrackBadge}>
+                <Text style={styles.singleTrackText} numberOfLines={1}>{audioChoiceLabel}</Text>
+              </View>
+              <TouchableOpacity accessibilityRole="button" onPress={nextTrack} style={styles.trackBtn} testID="track-next">
+                <Text style={styles.trackBtnText}>{'▶︎'}</Text>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.volumeContainer}>
@@ -471,6 +508,24 @@ const themedStyles = (theme: any, mode: string) => StyleSheet.create({
   },
   controlsSection: {
     gap: 16,
+  },
+  trackRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  trackBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+  },
+  trackBtnText: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: '700',
   },
   singleTrackBadge: {
     alignSelf: 'flex-start',

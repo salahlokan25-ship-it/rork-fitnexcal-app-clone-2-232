@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { useUser } from '@/hooks/user-store';
 import { Theme } from '@/constants/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function IndexScreen() {
   const { isLoading, hasCompletedOnboarding, user, isAuthenticated } = useUser();
@@ -62,17 +63,23 @@ export default function IndexScreen() {
         }),
       ]),
       Animated.delay(700),
-    ]).start(() => {
+    ]).start(async () => {
       setShowSplash(false);
+      try {
+        const seen = await AsyncStorage.getItem('intro_seen');
+        if (!seen) {
+          router.replace('/intro');
+          return;
+        }
+      } catch {}
       if (!isAuthenticated) {
         router.replace('/sign-in');
         return;
       }
       if (!hasCompletedOnboarding) {
         router.replace('/onboarding');
-      } else if (!user?.is_premium) {
-        router.replace('/paywall');
       } else {
+        // Returning users skip quiz and go straight to the plan (Home)
         router.replace('/(tabs)/home');
       }
     });

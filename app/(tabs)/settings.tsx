@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Edit, ChevronRight, TrendingUp, Flame, Target, Activity, Key, Trash2, FileText, Shield, Info, PieChart, Droplets, Dumbbell, Beaker, Sprout } from 'lucide-react-native';
+import { Edit, ChevronRight, TrendingUp, Flame, Target, Activity, Key, FileText, Shield, Info, PieChart, Droplets, Dumbbell, Beaker, Sprout } from 'lucide-react-native';
 import { useUser } from '@/hooks/user-store';
 import { router } from 'expo-router';
 import { useTheme } from '@/hooks/theme';
@@ -11,12 +11,12 @@ import { Image } from 'expo-image';
 
 export default function SettingsScreen() {
   console.log('[SettingsScreen] render');
-  const { user, signOut, authUser, updateUser } = useUser();
+  const { user, signOut, authUser, updateUser, isLoading } = useUser();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [showAvatarPicker, setShowAvatarPicker] = useState<boolean>(false);
 
-  if (!user) {
+  if (isLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <View style={stylesBase.loadingContainer}>
@@ -36,29 +36,7 @@ export default function SettingsScreen() {
     router.push('/change-password');
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AsyncStorage.clear();
-              Alert.alert('Account Deleted', 'Your account and all data have been permanently deleted.', [
-                { text: 'OK', onPress: () => router.replace('/sign-in') }
-              ]);
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete account. Please try again.');
-            }
-          },
-        },
-      ],
-    );
-  };
+  // Delete Account removed per request
 
   const handlePrivacyPolicy = () => {
     router.push('/privacy-policy');
@@ -72,26 +50,13 @@ export default function SettingsScreen() {
     router.push('/references');
   };
 
-  const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out? Your data will be saved locally.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await signOut();
-              router.replace('/sign-in');
-            } catch {
-              Alert.alert('Error', 'Failed to sign out. Please try again.');
-            }
-          },
-        },
-      ],
-    );
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.replace('/sign-in');
+    } catch {
+      Alert.alert('Error', 'Failed to sign out. Please try again.');
+    }
   };
 
   const handleViewTrends = () => {
@@ -114,14 +79,14 @@ export default function SettingsScreen() {
               onPress={() => setShowAvatarPicker(true)}
               testID="change-avatar"
             >
-              {user.avatar_url ? (
-                <Image source={{ uri: user.avatar_url }} style={dynamic.profileAvatarImg} contentFit="cover" />
+              {user?.avatar_url ? (
+                <Image source={{ uri: user?.avatar_url }} style={dynamic.profileAvatarImg} contentFit="cover" />
               ) : (
-                <Text style={dynamic.profileAvatarText}>{user.name?.charAt(0).toUpperCase() || 'C'}</Text>
+                <Text style={dynamic.profileAvatarText}>{user?.name?.charAt(0).toUpperCase() || 'C'}</Text>
               )}
             </TouchableOpacity>
             <View style={dynamic.profileInfo}>
-              <Text style={dynamic.profileName}>{user.name || 'Cameron Wilson'}</Text>
+              <Text style={dynamic.profileName}>{user?.name || 'Cameron Wilson'}</Text>
               <Text style={dynamic.profileEmail}>{authUser?.email || 'cameron.wilson@email.com'}</Text>
             </View>
           </View>
@@ -225,9 +190,6 @@ export default function SettingsScreen() {
           <View style={dynamic.logoutDeleteRow}>
             <TouchableOpacity style={dynamic.logOutButton} onPress={handleSignOut}>
               <Text style={dynamic.logOutButtonText}>Log Out</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={dynamic.deleteButton} onPress={handleDeleteAccount}>
-              <Text style={dynamic.deleteButtonText}>Delete Account</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -336,7 +298,7 @@ export default function SettingsScreen() {
               <Text style={dynamic.modalActionText}>Take Photo</Text>
             </TouchableOpacity>
 
-            {user.avatar_url ? (
+            {user?.avatar_url ? (
               <TouchableOpacity
                 style={dynamic.modalAction}
                 onPress={async () => {

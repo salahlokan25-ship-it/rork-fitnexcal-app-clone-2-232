@@ -2,11 +2,12 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
-import { Theme } from '@/constants/theme';
+import { useTheme } from '@/hooks/theme';
 import { useUser } from '@/hooks/user-store';
 
 export default function SignUpScreen() {
   const { signUp } = useUser();
+  const { theme } = useTheme();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -30,6 +31,8 @@ export default function SignUpScreen() {
     }
   }, [email, password, isValid, signUp]);
 
+  const styles = createStyles(theme);
+
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -43,7 +46,7 @@ export default function SignUpScreen() {
         <View style={styles.inputWrap}>
           <TextInput
             placeholder="Email"
-            placeholderTextColor="#A0B8FF"
+            placeholderTextColor={theme.colors.textMuted}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -55,7 +58,7 @@ export default function SignUpScreen() {
         <View style={styles.inputWrap}>
           <TextInput
             placeholder="Password"
-            placeholderTextColor="#A0B8FF"
+            placeholderTextColor={theme.colors.textMuted}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -81,32 +84,33 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Theme.colors.primary700 },
-  center: { alignItems: 'center', paddingTop: 48, paddingBottom: 8 },
-  logo: { width: 96, height: 96, marginBottom: 8 },
-  brand: { color: '#fff', fontSize: 28, fontWeight: '800' },
-  formCard: { flex: 1, paddingTop: 24, paddingHorizontal: 20 },
-  inputWrap: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-  },
-  input: { color: '#fff', fontSize: 16 },
-  primaryButton: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 6,
-  },
-  primaryButtonText: { color: Theme.colors.primary700, fontSize: 16, fontWeight: '800', letterSpacing: 0.4 },
-  disabled: { opacity: 0.6 },
-  linkTouch: { alignItems: 'center', paddingVertical: 18 },
-  linkText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: theme.colors.background },
+    center: { alignItems: 'center', paddingTop: 48, paddingBottom: 8 },
+    logo: { width: 96, height: 96, marginBottom: 8 },
+    brand: { color: theme.colors.text, fontSize: 28, fontWeight: '800' },
+    formCard: { flex: 1, paddingTop: 24, paddingHorizontal: 20 },
+    inputWrap: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    input: { color: theme.colors.text, fontSize: 16 },
+    primaryButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 14,
+      paddingVertical: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 6,
+    },
+    primaryButtonText: { color: theme.colors.text, fontSize: 16, fontWeight: '800', letterSpacing: 0.4 },
+    disabled: { opacity: 0.6 },
+    linkTouch: { alignItems: 'center', paddingVertical: 18 },
+    linkText: { color: theme.colors.text, fontSize: 14, fontWeight: '600' },
+  });

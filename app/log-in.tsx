@@ -2,11 +2,12 @@ import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Image, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
-import { Theme } from '@/constants/theme';
+import { useTheme } from '@/hooks/theme';
 import { useUser } from '@/hooks/user-store';
 
 export default function LogInScreen() {
   const { signIn } = useUser();
+  const { theme } = useTheme();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -45,6 +46,8 @@ export default function LogInScreen() {
     }
   }, [email, password, isValid, signIn]);
 
+  const styles = createStyles(theme);
+
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -73,7 +76,7 @@ export default function LogInScreen() {
         <View style={styles.inputWrap}>
           <TextInput
             placeholder="Email"
-            placeholderTextColor="#A0B8FF"
+            placeholderTextColor={theme.colors.textMuted}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -85,7 +88,7 @@ export default function LogInScreen() {
         <View style={styles.inputWrap}>
           <TextInput
             placeholder="Password"
-            placeholderTextColor="#A0B8FF"
+            placeholderTextColor={theme.colors.textMuted}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -111,54 +114,35 @@ export default function LogInScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Theme.colors.background },
-  center: { alignItems: 'center', paddingTop: 64, paddingBottom: 8 },
-  logo: { width: 96, height: 96, marginBottom: 8 },
-  brand: { color: '#fff', fontSize: 28, fontWeight: '800', letterSpacing: 0.5 },
-  formCard: {
-    flex: 1,
-    paddingTop: 24,
-    paddingHorizontal: 20,
-  },
-  inputWrap: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-  },
-  input: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  primaryButton: {
-    backgroundColor: Theme.colors.primary700,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 6,
-  },
-  primaryButtonText: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 0.4 },
-  disabled: { opacity: 0.6 },
-  linkTouch: { alignItems: 'center', paddingVertical: 18 },
-  linkText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  glowWrap: { position: 'absolute', top: 16, alignSelf: 'center', width: 220, height: 220 },
-  glow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 110,
-    backgroundColor: Theme.colors.primary700,
-    shadowColor: Theme.colors.primary700,
-    shadowOpacity: 0.6,
-    shadowRadius: 40,
-    shadowOffset: { width: 0, height: 12 },
-    opacity: 0.6,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: theme.colors.background },
+    center: { alignItems: 'center', paddingTop: 48, paddingBottom: 8 },
+    glowWrap: { position: 'absolute', top: 10, width: '100%', height: 72, alignItems: 'center', justifyContent: 'center' },
+    glow: { width: 220, height: 60, borderRadius: 32, backgroundColor: theme.colors.primary },
+    logo: { width: 92, height: 92, marginBottom: 8 },
+    brand: { color: theme.colors.text, fontSize: 28, fontWeight: '800' },
+    formCard: { flex: 1, paddingTop: 24, paddingHorizontal: 20 },
+    inputWrap: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    input: { color: theme.colors.text, fontSize: 16 },
+    primaryButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 14,
+      paddingVertical: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 6,
+    },
+    primaryButtonText: { color: theme.colors.text, fontSize: 16, fontWeight: '800', letterSpacing: 0.4 },
+    disabled: { opacity: 0.6 },
+    linkTouch: { alignItems: 'center', paddingVertical: 18 },
+    linkText: { color: theme.colors.text, fontSize: 14, fontWeight: '600' },
+  });

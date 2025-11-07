@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserProfile } from '@/types/nutrition';
 import { ACTIVITY_MULTIPLIERS, GOAL_ADJUSTMENTS, MACRO_RATIOS } from '@/constants/nutrition';
+import { supabase } from '@/lib/supabase';
 
 type AuthUser = { email: string } | null;
 
@@ -67,27 +68,53 @@ export const [UserProvider, useUser] = createContextHook(() => {
   const loadState = useCallback(async () => {
     console.log('[UserStore] Loading state');
     try {
-      const authRaw = await AsyncStorage.getItem(AUTH_KEY);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData.session;
 
-      if (authRaw) {
-        const parsed: AuthUser = JSON.parse(authRaw);
-        setAuthUser(parsed);
+      if (session?.user?.email) {
+        const email = session.user.email;
+        setAuthUser({ email });
 
-        if (parsed?.email) {
-          const perUserOnboarding = await AsyncStorage.getItem(onboardingKeyFor(parsed.email));
-          if (perUserOnboarding === null) {
-            const legacy = await AsyncStorage.getItem(ONBOARDING_KEY);
-            const legacyBool = legacy === 'true';
-            await AsyncStorage.setItem(onboardingKeyFor(parsed.email), legacyBool ? 'true' : 'false');
-            setHasCompletedOnboarding(legacyBool);
-          } else {
-            setHasCompletedOnboarding(perUserOnboarding === 'true');
-          }
+        const perUserOnboarding = await AsyncStorage.getItem(onboardingKeyFor(email));
+        if (perUserOnboarding === null) {
+          const legacy = await AsyncStorage.getItem(ONBOARDING_KEY);
+          const legacyBool = legacy === 'true';
+          await AsyncStorage.setItem(onboardingKeyFor(email), legacyBool ? 'true' : 'false');
+          setHasCompletedOnboarding(legacyBool);
+        } else {
+          setHasCompletedOnboarding(perUserOnboarding === 'true');
         }
 
-        const storedProfile = await AsyncStorage.getItem(USER_PROFILE_KEY);
-        if (storedProfile) {
-          setUser(JSON.parse(storedProfile));
+        // Load profile from Supabase
+        const { data: profileRow } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (profileRow) {
+          const loadedProfile: UserProfile = {
+            id: session.user.id,
+            name: profileRow.display_name ?? profileRow.name ?? '',
+            age: profileRow.age ?? 0,
+            gender: (profileRow.gender ?? 'male') as 'male' | 'female' | 'other',
+            height: profileRow.height ?? 0,
+            weight: profileRow.weight ?? 0,
+            weightGoal: profileRow.weight_goal ?? undefined,
+            activity_level: (profileRow.activity_level ?? 'moderate') as UserProfile['activity_level'],
+            goal: (profileRow.goal ?? 'maintain_weight') as UserProfile['goal'],
+            goal_calories: profileRow.goal_calories ?? 0,
+            goal_protein: profileRow.goal_protein ?? 0,
+            goal_carbs: profileRow.goal_carbs ?? 0,
+            goal_fat: profileRow.goal_fat ?? 0,
+            is_premium: !!profileRow.is_premium,
+            avatar_url: profileRow.avatar_url ?? undefined,
+            medical_conditions: profileRow.medical_conditions ?? undefined,
+            allergies: profileRow.allergies ?? undefined,
+            lab_values: profileRow.lab_values ?? undefined,
+            nutrition_preferences: profileRow.nutrition_preferences ?? undefined,
+          };
+          setUser(loadedProfile);
         } else {
           setUser(null);
         }
@@ -118,18 +145,34 @@ export const [UserProvider, useUser] = createContextHook(() => {
     void loadState();
   }, [loadState]);
 
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const email = session?.user?.email ?? null;
+      setAuthUser(email ? { email } : null);
+      if (email) {
+        // Reload profile when auth changes
+        await loadState();
+      } else {
+        setUser(null);
+      }
+    });
+    return () => {
+      sub.subscription.unsubscribe();
+    };
+  }, [loadState]);
+
   const signUp = useCallback(async (email: string, password: string) => {
     if (!email.trim() || !password.trim()) {
       throw new Error('Email and password are required');
     }
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      const auth: AuthUser = { email: normalizedEmail };
-      await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+      const { error } = await supabase.auth.signUp({ email: normalizedEmail, password: password.trim() });
+      if (error) throw error;
       await AsyncStorage.setItem(onboardingKeyFor(normalizedEmail), 'false');
-      setAuthUser(auth);
+      setAuthUser({ email: normalizedEmail });
       setHasCompletedOnboarding(false);
-      return auth;
+      return { email: normalizedEmail } as AuthUser;
     } catch (e) {
       console.error('[UserStore] signUp error', e);
       throw e;
@@ -142,9 +185,9 @@ export const [UserProvider, useUser] = createContextHook(() => {
     }
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      const auth: AuthUser = { email: normalizedEmail };
-      await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(auth));
-      setAuthUser(auth);
+      const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password: password.trim() });
+      if (error) throw error;
+      setAuthUser({ email: normalizedEmail });
       const perUserOnboarding = await AsyncStorage.getItem(onboardingKeyFor(normalizedEmail));
       if (perUserOnboarding === null) {
         await AsyncStorage.setItem(onboardingKeyFor(normalizedEmail), 'false');
@@ -152,7 +195,7 @@ export const [UserProvider, useUser] = createContextHook(() => {
       } else {
         setHasCompletedOnboarding(perUserOnboarding === 'true');
       }
-      return auth;
+      return { email: normalizedEmail } as AuthUser;
     } catch (e) {
       console.error('[UserStore] signIn error', e);
       throw e;
@@ -161,7 +204,7 @@ export const [UserProvider, useUser] = createContextHook(() => {
 
   const signOut = useCallback(async () => {
     try {
-      await AsyncStorage.removeItem(AUTH_KEY);
+      await supabase.auth.signOut();
       setAuthUser(null);
     } catch (e) {
       console.error('[UserStore] signOut error', e);
@@ -181,10 +224,15 @@ export const [UserProvider, useUser] = createContextHook(() => {
 
       try {
         const goals = calculateCalorieGoal(profileData);
+
+        // Determine current user id from Supabase session
+        const { data: sess } = await supabase.auth.getSession();
+        const userId = sess.session?.user?.id ?? Date.now().toString();
+
         const newUser: UserProfile = {
           ...profileData,
           ...goals,
-          id: Date.now().toString(),
+          id: userId,
           is_premium: false,
         };
 
@@ -195,6 +243,26 @@ export const [UserProvider, useUser] = createContextHook(() => {
         };
         await AsyncStorage.setItem(WEIGHT_HISTORY_KEY, JSON.stringify([initialWeightEntry]));
         setWeightHistory([initialWeightEntry]);
+
+        // Upsert profile to Supabase
+        await supabase.from('profiles').upsert({
+          id: userId,
+          email: (authUser?.email ?? null),
+          display_name: newUser.name,
+          age: newUser.age,
+          gender: newUser.gender,
+          height: newUser.height,
+          weight: newUser.weight,
+          weight_goal: newUser.weightGoal ?? null,
+          activity_level: newUser.activity_level,
+          goal: newUser.goal,
+          goal_calories: newUser.goal_calories,
+          goal_protein: newUser.goal_protein,
+          goal_carbs: newUser.goal_carbs,
+          goal_fat: newUser.goal_fat,
+          is_premium: newUser.is_premium,
+          updated_at: new Date().toISOString(),
+        });
 
         await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(newUser));
         setUser(newUser);
@@ -235,6 +303,25 @@ export const [UserProvider, useUser] = createContextHook(() => {
           await AsyncStorage.setItem(WEIGHT_HISTORY_KEY, JSON.stringify(updatedHistory));
           setWeightHistory(updatedHistory);
         }
+
+        // Persist to Supabase
+        await supabase.from('profiles').upsert({
+          id: updatedUser.id,
+          display_name: updatedUser.name,
+          age: updatedUser.age,
+          gender: updatedUser.gender,
+          height: updatedUser.height,
+          weight: updatedUser.weight,
+          weight_goal: updatedUser.weightGoal ?? null,
+          activity_level: updatedUser.activity_level,
+          goal: updatedUser.goal,
+          goal_calories: updatedUser.goal_calories,
+          goal_protein: updatedUser.goal_protein,
+          goal_carbs: updatedUser.goal_carbs,
+          goal_fat: updatedUser.goal_fat,
+          is_premium: updatedUser.is_premium,
+          updated_at: new Date().toISOString(),
+        });
 
         await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(updatedUser));
         setUser(updatedUser);

@@ -77,7 +77,7 @@ export default function OnboardingScreen() {
           goal: formData.goal,
         });
         await completeOnboarding();
-        router.replace('/paywall');
+        router.replace('/(tabs)/home');
       } catch (_err) {
         Alert.alert('Error', 'Failed to create profile. Please try again.');
       }
@@ -223,12 +223,14 @@ export default function OnboardingScreen() {
           testID={`goal-${goal.key}`}
           accessibilityRole="button"
         >
-          <Text style={[styles.optionTitle, formData.goal === goal.key && styles.optionTitleActive]}>
-            {t(goal.labelKey)}
-          </Text>
-          <Text style={[styles.optionDescription, formData.goal === goal.key && styles.optionDescriptionActive]}>
-            {goal.description}
-          </Text>
+          <View>
+            <Text style={[styles.optionTitle, formData.goal === goal.key && styles.optionTitleActive]}>
+              {t(goal.labelKey)}
+            </Text>
+            <Text style={[styles.optionDescription, formData.goal === goal.key && styles.optionDescriptionActive]}>
+              {goal.description}
+            </Text>
+          </View>
         </TouchableOpacity>
       ))}
     </View>
@@ -277,12 +279,14 @@ export default function OnboardingScreen() {
           testID={`activity-${level.key}`}
           accessibilityRole="button"
         >
-          <Text style={[styles.optionTitle, formData.activity_level === level.key && styles.optionTitleActive]}>
-            {level.label}
-          </Text>
-          <Text style={[styles.optionDescription, formData.activity_level === level.key && styles.optionDescriptionActive]}>
-            {level.description}
-          </Text>
+          <View>
+            <Text style={[styles.optionTitle, formData.activity_level === level.key && styles.optionTitleActive]}>
+              {level.label}
+            </Text>
+            <Text style={[styles.optionDescription, formData.activity_level === level.key && styles.optionDescriptionActive]}>
+              {level.description}
+            </Text>
+          </View>
         </TouchableOpacity>
       ))}
     </View>
@@ -382,10 +386,12 @@ export default function OnboardingScreen() {
           disabled={!isStepValid()}
           testID="onboarding-next"
         >
-          <Text style={styles.nextButtonText}>
-            {currentStep === STEPS.length - 1 ? t('get_started') : t('next')}
-          </Text>
-          <ChevronRight size={20} color="white" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={styles.nextButtonText}>
+              {currentStep === STEPS.length - 1 ? t('get_started') : t('next')}
+            </Text>
+            <ChevronRight size={20} color="white" />
+          </View>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

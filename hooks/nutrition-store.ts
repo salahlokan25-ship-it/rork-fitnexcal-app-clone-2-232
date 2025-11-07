@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DailyNutrition, MealEntry, FoodItem, MealType, WeeklyGoalSettings, WeeklySummary } from '@/types/nutrition';
 import { useUser } from '@/hooks/user-store';
+import { supabase } from '@/lib/supabase';
 
 type HealthCondition = 'diabetes' | 'hypertension' | 'celiac' | 'kidney_disease' | 'allergy';
 
@@ -131,6 +132,38 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     }
   }, []);
 
+  // Load any previously saved remote state from Supabase
+  const loadRemoteState = useCallback(async () => {
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) return;
+      const { data, error } = await supabase
+        .from('user_data')
+        .select('*')
+        .eq('user_id', uid)
+        .maybeSingle();
+      if (error) return;
+      if (data?.data) {
+        const remote = data.data as any;
+        if (remote.weeklySettings) {
+          setWeeklySettings(remote.weeklySettings as WeeklyGoalSettings);
+          await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(remote.weeklySettings));
+        }
+        if (remote.dailyNutrition) {
+          const dn = remote.dailyNutrition as DailyNutrition;
+          // Ensure dates/fields are valid
+          dn.meals = (dn.meals || []).map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }));
+          setDailyNutrition(dn);
+          await AsyncStorage.setItem(`nutrition_${dn.date}`, JSON.stringify(dn));
+        }
+        if (remote.weeklySummary) setWeeklySummary(remote.weeklySummary as WeeklySummary);
+      }
+    } catch (e) {
+      console.log('[Nutrition] loadRemoteState error', e);
+    }
+  }, []);
+
   const saveSettings = useCallback(async (settings: WeeklyGoalSettings) => {
     try {
       await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
@@ -197,7 +230,8 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   useEffect(() => {
     void loadSettings();
     void loadTodayNutrition();
-  }, [loadSettings, loadTodayNutrition]);
+    void loadRemoteState();
+  }, [loadSettings, loadTodayNutrition, loadRemoteState]);
 
   const calculateTotals = (meals: MealEntry[]) => {
     return meals.reduce(
@@ -214,6 +248,23 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
   const persistDay = useCallback(async (day: DailyNutrition) => {
     await AsyncStorage.setItem(`nutrition_${day.date}`, JSON.stringify(day));
   }, []);
+
+  // Save combined state to Supabase
+  const saveRemoteState = useCallback(async (next?: { dailyNutrition?: DailyNutrition; weeklySettings?: WeeklyGoalSettings; weeklySummary?: WeeklySummary }) => {
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) return;
+      const payload = {
+        dailyNutrition: next?.dailyNutrition ?? dailyNutrition,
+        weeklySettings: next?.weeklySettings ?? weeklySettings,
+        weeklySummary: next?.weeklySummary ?? weeklySummary,
+      };
+      await supabase.from('user_data').upsert({ user_id: uid, data: payload });
+    } catch (e) {
+      console.log('[Nutrition] saveRemoteState error', e);
+    }
+  }, [dailyNutrition, weeklySettings, weeklySummary]);
 
   const recalcWeeklySummary = useCallback(async () => {
     if (!dailyNutrition) return;
@@ -279,6 +330,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
         await persistDay(updatedNutrition);
         setDailyNutrition(updatedNutrition);
         await recalcWeeklySummary();
+        void saveRemoteState({ dailyNutrition: updatedNutrition });
 
         const alerts = evaluateHealthAlerts(foodItem, user?.medical_conditions, user?.allergies, user?.nutrition_preferences);
         if (alerts.length > 0) {
@@ -332,13 +384,14 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
       await persistDay(updatedNutrition);
       setDailyNutrition(updatedNutrition);
       await recalcWeeklySummary();
+      void saveRemoteState({ dailyNutrition: updatedNutrition });
     },
     [dailyNutrition, persistDay, recalcWeeklySummary],
   );
 
   const moveCaloriesBetweenMeals = useCallback(
     async (from: MealType, to: MealType, calories: number) => {
-      if (!dailyNutrition || calories <= 0) return;
+      if (!dailyNutrition || calories <= 0 || from === to) return;
       try {
         let remaining = calories;
         const sorted = [...dailyNutrition.meals]
@@ -348,14 +401,14 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
         for (const meal of sorted) {
           if (remaining <= 0) break;
           const mealCals = meal.food_item.calories * meal.quantity;
+          if (mealCals <= 0) continue;
           const take = Math.min(remaining, mealCals);
           const fraction = take / mealCals;
+          const idx = updatedMeals.findIndex((m) => m.id === meal.id);
           if (fraction >= 1) {
-            const idx = updatedMeals.findIndex((m) => m.id === meal.id);
             if (idx >= 0) updatedMeals.splice(idx, 1);
             updatedMeals.push({ ...meal, id: `${meal.id}_moved_${Date.now()}`, meal_type: to });
           } else {
-            const idx = updatedMeals.findIndex((m) => m.id === meal.id);
             if (idx >= 0) {
               updatedMeals[idx] = { ...meal, quantity: meal.quantity * (1 - fraction) };
             }
@@ -372,11 +425,14 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
         };
         await persistDay(updatedNutrition);
         setDailyNutrition(updatedNutrition);
-      } catch (e) {
-        console.error('[Nutrition] moveCaloriesBetweenMeals error', e);
+        await recalcWeeklySummary();
+        void saveRemoteState({ dailyNutrition: updatedNutrition });
+      } catch (error) {
+        console.error('[Nutrition] moveCaloriesBetweenMeals error', error);
+        throw error;
       }
     },
-    [dailyNutrition, persistDay],
+    [dailyNutrition, persistDay, recalcWeeklySummary, saveRemoteState],
   );
 
   const moveCaloriesAcrossDays = useCallback(
@@ -440,11 +496,15 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
           setDailyNutrition(updatedTo);
         }
         await recalcWeeklySummary();
+        const todayISO2 = getTodayKey();
+        const latest = todayISO2 === toDateISO ? updatedTo : todayISO2 === fromDateISO ? updatedFrom : dailyNutrition;
+        const latestValid = latest ?? undefined;
+        void saveRemoteState({ dailyNutrition: latestValid });
       } catch (e) {
         console.error('[Nutrition] moveCaloriesAcrossDays error', e);
       }
     },
-    [loadDay, recalcWeeklySummary],
+    [loadDay, recalcWeeklySummary, dailyNutrition, saveRemoteState],
   );
 
   const loadHistoryRange = useCallback(async (days: number) => {
@@ -480,6 +540,7 @@ export const [NutritionProvider, useNutrition] = createContextHook(() => {
     const next = { ...weeklySettings, ...updates } as WeeklyGoalSettings;
     await saveSettings(next);
     await recalcWeeklySummary();
+    void saveRemoteState({ weeklySettings: next });
   }, [weeklySettings, saveSettings, recalcWeeklySummary]);
 
   useEffect(() => {

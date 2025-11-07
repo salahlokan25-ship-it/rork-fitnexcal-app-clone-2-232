@@ -105,9 +105,9 @@ export default function DashboardScreen() {
 
   const dynamic = stylesWithTheme(theme);
 
-  if (isLoading || !dailyNutrition || !user) {
+  if (isLoading || !dailyNutrition) {
     return (
-      <View style={[dynamic.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[dynamic.container, { backgroundColor: theme.colors.background }]}> 
         <View style={styles.loadingContainer}>
           <Text style={[dynamic.initialLoadingText, { color: theme.colors.textMuted }]}>Loading your nutrition data...</Text>
         </View>
@@ -117,6 +117,11 @@ export default function DashboardScreen() {
 
   const calorieProgress = Math.max(0, Math.min(1, dailyNutrition.total_calories / dailyNutrition.goal_calories));
   const remainingCalories = Math.max(0, dailyNutrition.goal_calories - dailyNutrition.total_calories);
+
+  // Safe defaults if user goals are not yet available
+  const goalCarbs = (user?.goal_carbs ?? 250);
+  const goalProtein = (user?.goal_protein ?? 120);
+  const goalFat = (user?.goal_fat ?? 70);
 
   const mealsByType = {
     breakfast: dailyNutrition.meals.filter((m) => m.meal_type === 'breakfast'),
@@ -211,32 +216,32 @@ export default function DashboardScreen() {
           <View style={dynamic.macrosRow}>
             <View style={dynamic.macroItem}>
               <View style={dynamic.macroCircleWrapper}>
-                <CircularProgress size={80} strokeWidth={12} progress={dailyNutrition.total_carbs / user.goal_carbs} color="#F59E0B" backgroundColor={theme.colors.cardBorder}>
+                <CircularProgress size={80} strokeWidth={12} progress={dailyNutrition.total_carbs / goalCarbs} color="#F59E0B" backgroundColor={theme.colors.cardBorder}>
                   <Text style={dynamic.macroValue}>{Math.round(dailyNutrition.total_carbs)}g</Text>
                 </CircularProgress>
               </View>
               <Text style={dynamic.macroLabel}>Carbs</Text>
-              <Text style={dynamic.macroGoal}>of {user.goal_carbs}g</Text>
+              <Text style={dynamic.macroGoal}>of {goalCarbs}g</Text>
             </View>
 
             <View style={dynamic.macroItem}>
               <View style={dynamic.macroCircleWrapper}>
-                <CircularProgress size={80} strokeWidth={12} progress={dailyNutrition.total_protein / user.goal_protein} color="#EF4444" backgroundColor={theme.colors.cardBorder}>
+                <CircularProgress size={80} strokeWidth={12} progress={dailyNutrition.total_protein / goalProtein} color="#EF4444" backgroundColor={theme.colors.cardBorder}>
                   <Text style={dynamic.macroValue}>{Math.round(dailyNutrition.total_protein)}g</Text>
                 </CircularProgress>
               </View>
               <Text style={dynamic.macroLabel}>Protein</Text>
-              <Text style={dynamic.macroGoal}>of {user.goal_protein}g</Text>
+              <Text style={dynamic.macroGoal}>of {goalProtein}g</Text>
             </View>
 
             <View style={dynamic.macroItem}>
               <View style={dynamic.macroCircleWrapper}>
-                <CircularProgress size={80} strokeWidth={12} progress={dailyNutrition.total_fat / user.goal_fat} color="#10B981" backgroundColor={theme.colors.cardBorder}>
+                <CircularProgress size={80} strokeWidth={12} progress={dailyNutrition.total_fat / goalFat} color="#10B981" backgroundColor={theme.colors.cardBorder}>
                   <Text style={dynamic.macroValue}>{Math.round(dailyNutrition.total_fat)}g</Text>
                 </CircularProgress>
               </View>
               <Text style={dynamic.macroLabel}>Fat</Text>
-              <Text style={dynamic.macroGoal}>of {user.goal_fat}g</Text>
+              <Text style={dynamic.macroGoal}>of {goalFat}g</Text>
             </View>
           </View>
         </View>
@@ -409,7 +414,7 @@ export default function DashboardScreen() {
               <Text style={dynamic.progressJourneyHeading}>On track to reach your goal!</Text>
               <Text style={dynamic.progressJourneySubtitle}>2 weeks to next milestone</Text>
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/trends')} testID="open-report">
               <Text style={dynamic.viewReportLink}>View Report</Text>
             </TouchableOpacity>
           </View>
