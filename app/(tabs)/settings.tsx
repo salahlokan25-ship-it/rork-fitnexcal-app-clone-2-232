@@ -106,7 +106,7 @@ export default function SettingsScreen() {
         <View style={{ width: 40, height: 40 }} />
       </View>
 
-      <ScrollView style={dynamic.content} contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false} testID="more-scroll">
+      <ScrollView style={dynamic.content} showsVerticalScrollIndicator={false} testID="more-scroll">
         <View style={dynamic.profileSection}>
           <View style={dynamic.profileRow}>
             <TouchableOpacity
@@ -223,10 +223,10 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
           <View style={dynamic.logoutDeleteRow}>
-            <TouchableOpacity style={dynamic.logOutButton} onPress={handleSignOut} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} testID="btn-logout">
+            <TouchableOpacity style={dynamic.logOutButton} onPress={handleSignOut}>
               <Text style={dynamic.logOutButtonText}>Log Out</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={dynamic.deleteButton} onPress={handleDeleteAccount} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} testID="btn-delete-account">
+            <TouchableOpacity style={dynamic.deleteButton} onPress={handleDeleteAccount}>
               <Text style={dynamic.deleteButtonText}>Delete Account</Text>
             </TouchableOpacity>
           </View>
