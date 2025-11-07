@@ -13,7 +13,6 @@ const STEPS = [
   'height',
   'weight',
   'gender',
-  'goals',
   'weight_goal',
   'activity',
   'complete',
@@ -105,8 +104,7 @@ export default function OnboardingScreen() {
         return /^\d+$/.test(formData.weight);
       case 'gender':
         return formData.gender !== '';
-      case 'goals':
-        return Boolean(formData.goal);
+      
       case 'weight_goal':
         return /^\d+$/.test(formData.weight_goal);
       case 'activity':
@@ -345,8 +343,7 @@ export default function OnboardingScreen() {
         return renderWeightStep();
       case 'gender':
         return renderGenderStep();
-      case 'goals':
-        return renderGoalsStep();
+      
       case 'weight_goal':
         return renderWeightGoalStep();
       case 'activity':
