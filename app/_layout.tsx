@@ -23,14 +23,8 @@ function AppContent() {
   const { isLoading } = useUser();
 
   useEffect(() => {
-    if (!isLoading) {
-      SplashScreen.hideAsync();
-    }
-  }, [isLoading]);
-
-  if (isLoading) {
-    return null;
-  }
+    SplashScreen.hideAsync();
+  }, []);
 
   return (
     <Stack screenOptions={{ headerBackTitle: "Back" }}>

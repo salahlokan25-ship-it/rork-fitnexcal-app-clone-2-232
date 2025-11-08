@@ -17,11 +17,7 @@ export default function IntroScreen() {
     try {
       await AsyncStorage.setItem(INTRO_SEEN_KEY, 'true');
     } catch {}
-    if (isAuthenticated) {
-      router.replace('/(tabs)/home');
-    } else {
-      router.replace('/sign-in');
-    }
+    router.replace('/subscription' as any);
   }, [isAuthenticated]);
 
   return (

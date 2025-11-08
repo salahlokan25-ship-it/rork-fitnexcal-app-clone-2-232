@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Edit, ChevronRight, TrendingUp, Flame, Target, Activity, Key, FileText, Shield, Info, PieChart, Droplets, Dumbbell, Beaker, Sprout } from 'lucide-react-native';
+import { Edit, ChevronRight, TrendingUp, Flame, Target, Activity, Key, FileText, Shield, Info, PieChart, Droplets, Dumbbell, Beaker, Sprout, Crown } from 'lucide-react-native';
 import { useUser } from '@/hooks/user-store';
 import { router } from 'expo-router';
 import { useTheme } from '@/hooks/theme';
@@ -84,6 +84,11 @@ export default function SettingsScreen() {
               ) : (
                 <Text style={dynamic.profileAvatarText}>{user?.name?.charAt(0).toUpperCase() || 'C'}</Text>
               )}
+              {user?.is_premium ? (
+                <View style={dynamic.premiumBadge}>
+                  <Crown size={14} color="#FACC15" />
+                </View>
+              ) : null}
             </TouchableOpacity>
             <View style={dynamic.profileInfo}>
               <Text style={dynamic.profileName}>{user?.name || 'Cameron Wilson'}</Text>
@@ -93,6 +98,11 @@ export default function SettingsScreen() {
           <TouchableOpacity style={dynamic.editProfileButton} onPress={handleEditProfile}>
             <Edit size={16} color={theme.colors.text} />
             <Text style={dynamic.editProfileButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[dynamic.editProfileButton, { marginTop: 10 }]} onPress={() => router.push('/subscription' as any)}>
+            <PieChart size={16} color={theme.colors.text} />
+            <Text style={dynamic.editProfileButtonText}>Pro & Premium Plans</Text>
           </TouchableOpacity>
         </View>
 
@@ -354,6 +364,19 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     overflow: 'hidden' as const,
+  },
+  premiumBadge: {
+    position: 'absolute' as const,
+    right: -4,
+    bottom: -4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Theme.colors.background,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
   },
   profileAvatarImg: { width: '100%', height: '100%' },
   profileAvatarText: {

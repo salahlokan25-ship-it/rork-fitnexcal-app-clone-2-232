@@ -1,9 +1,3 @@
-/// <reference types="vite/client" />
+/// <reference types="expo/types" />
 
-interface ImportMetaEnv {
-  readonly [key: string]: string | undefined;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
+// NOTE: This file should not be edited and should be in your git ignore

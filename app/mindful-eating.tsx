@@ -22,6 +22,14 @@ type WebAudio = {
 // These URLs permit streaming and are suitable for mindfulness sessions.
 const TRACKS = [
   {
+    title: 'Calm Fitness — Background Music',
+    uri: 'https://cdn.pixabay.com/download/audio/2023/10/17/audio_2d1b9aefc9.mp3?filename=groove-sports-breezy-fitness-flowing-calm-music-93682.mp3',
+  },
+  {
+    title: 'Calm Fitness — Local',
+    uri: '/calm_fitness.mp3',
+  },
+  {
     title: 'Breathe — Komiku (FMA)',
     uri: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Komiku/Relax/Komiku_-_04_-_Breathe.mp3',
   },
