@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/theme';
 import { useUser } from '@/hooks/user-store';
+import { Camera, BarChart3, Target, Bot } from 'lucide-react-native';
 
 const INTRO_SEEN_KEY = 'intro_seen';
 
@@ -49,25 +50,25 @@ export default function IntroScreen() {
 
         <View style={styles.cards}>
           <FeatureCard
-            icon="📷"
+            icon={Camera}
             title="AI Food Recognition"
             subtitle="Simply snap a photo to log your meals."
             themeColors={{ text: theme.colors.text, muted: theme.colors.textMuted, surface: theme.colors.surface, border: theme.colors.border }}
           />
           <FeatureCard
-            icon="📈"
+            icon={BarChart3}
             title="Personalized Insights"
             subtitle="Receive AI-driven advice based on your habits."
             themeColors={{ text: theme.colors.text, muted: theme.colors.textMuted, surface: theme.colors.surface, border: theme.colors.border }}
           />
           <FeatureCard
-            icon="🎯"
+            icon={Target}
             title="Smart Goal Setting"
             subtitle="Let our AI help you set and adjust realistic goals."
             themeColors={{ text: theme.colors.text, muted: theme.colors.textMuted, surface: theme.colors.surface, border: theme.colors.border }}
           />
           <FeatureCard
-            icon="🤖"
+            icon={Bot}
             title="Your Personal AI Coach"
             subtitle="Get 24/7 support and motivation from your coach."
             themeColors={{ text: theme.colors.text, muted: theme.colors.textMuted, surface: theme.colors.surface, border: theme.colors.border }}
@@ -84,11 +85,11 @@ export default function IntroScreen() {
   );
 }
 
-function FeatureCard({ icon, title, subtitle, themeColors }: { icon: string; title: string; subtitle: string; themeColors: { text: string; muted: string; surface: string; border: string } }) {
+function FeatureCard({ icon: Icon, title, subtitle, themeColors }: { icon: React.ComponentType<{ size?: number; color?: string }>; title: string; subtitle: string; themeColors: { text: string; muted: string; surface: string; border: string } }) {
   return (
     <View style={[styles.card, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}> 
       <View style={styles.cardIconWrap}>
-        <Text style={styles.cardIcon}>{icon}</Text>
+        <Icon size={22} color="#007AFF" />
       </View>
       <View style={styles.cardTextWrap}>
         <Text style={[styles.cardTitle, { color: themeColors.text }]}>{title}</Text>
@@ -111,7 +112,6 @@ const styles = StyleSheet.create({
   cards: { padding: 16, gap: 12 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 12, borderWidth: 1 },
   cardIconWrap: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,122,255,0.1)' },
-  cardIcon: { fontSize: 22 },
   cardTextWrap: { flex: 1 },
   cardTitle: { fontSize: 16, fontWeight: '700' },
   cardSubtitle: { fontSize: 13, marginTop: 2 },

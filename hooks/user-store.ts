@@ -277,7 +277,9 @@ export const [UserProvider, useUser] = createContextHook(() => {
 
   const updateUser = useCallback(
     async (updates: Partial<UserProfile>) => {
-      if (!user) return;
+      if (!user) {
+        throw new Error('User not loaded');
+      }
 
       try {
         const updatedUser = { ...user, ...updates } as UserProfile;

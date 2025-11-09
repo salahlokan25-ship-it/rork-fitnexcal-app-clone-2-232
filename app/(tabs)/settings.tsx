@@ -82,7 +82,7 @@ export default function SettingsScreen() {
               {user?.avatar_url ? (
                 <Image source={{ uri: user?.avatar_url }} style={dynamic.profileAvatarImg} contentFit="cover" />
               ) : (
-                <Text style={dynamic.profileAvatarText}>{user?.name?.charAt(0).toUpperCase() || 'C'}</Text>
+                <Text style={dynamic.profileAvatarText}>{(user?.name?.trim()?.charAt(0) || authUser?.email?.charAt(0) || '?').toUpperCase()}</Text>
               )}
               {user?.is_premium ? (
                 <View style={dynamic.premiumBadge}>
@@ -91,8 +91,8 @@ export default function SettingsScreen() {
               ) : null}
             </TouchableOpacity>
             <View style={dynamic.profileInfo}>
-              <Text style={dynamic.profileName}>{user?.name || 'Cameron Wilson'}</Text>
-              <Text style={dynamic.profileEmail}>{authUser?.email || 'cameron.wilson@email.com'}</Text>
+              <Text style={dynamic.profileName}>{user?.name || (authUser?.email ? authUser.email.split('@')[0] : '')}</Text>
+              <Text style={dynamic.profileEmail}>{authUser?.email || ''}</Text>
             </View>
           </View>
           <TouchableOpacity style={dynamic.editProfileButton} onPress={handleEditProfile}>

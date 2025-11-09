@@ -6,7 +6,7 @@ import { useTheme } from '@/hooks/theme';
 import { User, Mail, Calendar, Ruler, Weight, Activity as ActivityIcon, Target } from 'lucide-react-native';
 
 export default function EditProfileScreen() {
-  const { user, updateUser } = useUser();
+  const { user, updateUser, createUser } = useUser();
   const { theme } = useTheme();
 
   const [name, setName] = useState(user?.name || '');
@@ -18,43 +18,76 @@ export default function EditProfileScreen() {
   const dynamic = stylesWithTheme(theme);
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      Alert.alert('Error', 'Name is required');
-      return;
+    const updates: any = {};
+    const trimmedName = name.trim();
+    if (trimmedName) updates.name = trimmedName;
+
+    if (age.trim()) {
+      const ageNum = parseInt(age);
+      if (isNaN(ageNum) || ageNum < 10 || ageNum > 120) {
+        Alert.alert('Error', 'Please enter a valid age (10-120)');
+        return;
+      }
+      updates.age = ageNum;
     }
 
-    const ageNum = parseInt(age);
-    const weightNum = parseFloat(weight);
-    const heightNum = parseFloat(height);
-
-    if (isNaN(ageNum) || ageNum < 10 || ageNum > 120) {
-      Alert.alert('Error', 'Please enter a valid age (10-120)');
-      return;
+    if (weight.trim()) {
+      const weightNum = parseFloat(weight);
+      if (isNaN(weightNum) || weightNum < 20 || weightNum > 300) {
+        Alert.alert('Error', 'Please enter a valid weight (20-300 kg)');
+        return;
+      }
+      updates.weight = weightNum;
     }
 
-    if (isNaN(weightNum) || weightNum < 20 || weightNum > 300) {
-      Alert.alert('Error', 'Please enter a valid weight (20-300 kg)');
-      return;
+    if (height.trim()) {
+      const heightNum = parseFloat(height);
+      if (isNaN(heightNum) || heightNum < 100 || heightNum > 250) {
+        Alert.alert('Error', 'Please enter a valid height (100-250 cm)');
+        return;
+      }
+      updates.height = heightNum;
     }
 
-    if (isNaN(heightNum) || heightNum < 100 || heightNum > 250) {
-      Alert.alert('Error', 'Please enter a valid height (100-250 cm)');
+    if (!updates.name && updates.age === undefined && updates.weight === undefined && updates.height === undefined) {
+      Alert.alert('Error', 'Please enter at least one field to update');
       return;
     }
 
     try {
       setIsSaving(true);
-      await updateUser({
-        name: name.trim(),
-        age: ageNum,
-        weight: weightNum,
-        height: heightNum,
-      });
-      Alert.alert('Success', 'Profile updated successfully!', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      await updateUser(updates);
+      router.back();
+    } catch (error: any) {
+      const msg = typeof error?.message === 'string' ? error.message : '';
+      if (/User not loaded/i.test(msg)) {
+        const fullName = name.trim();
+        const ageOk = age.trim() && !isNaN(parseInt(age)) && parseInt(age) >= 10 && parseInt(age) <= 120;
+        const weightOk = weight.trim() && !isNaN(parseFloat(weight)) && parseFloat(weight) >= 20 && parseFloat(weight) <= 300;
+        const heightOk = height.trim() && !isNaN(parseFloat(height)) && parseFloat(height) >= 100 && parseFloat(height) <= 250;
+        if (fullName && ageOk && weightOk && heightOk) {
+          try {
+            await createUser({
+              name: fullName,
+              age: parseInt(age),
+              weight: parseFloat(weight),
+              height: parseFloat(height),
+              gender: 'other',
+              activity_level: 'moderate',
+              goal: 'maintain_weight',
+              weightGoal: undefined,
+            } as any);
+            router.back();
+            return;
+          } catch (e) {
+            Alert.alert('Error', 'Could not create your profile. Please try again.');
+          }
+        } else {
+          Alert.alert('Almost there', 'Please fill Name, Age, Weight and Height to create your profile the first time.');
+        }
+      } else {
+        Alert.alert('Error', 'Failed to update profile. Please try again.');
+      }
     } finally {
       setIsSaving(false);
     }

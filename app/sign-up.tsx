@@ -107,9 +107,17 @@ export default function SignUpScreen() {
       setLoading(true);
       await signUp(email.trim().toLowerCase(), password.trim());
       router.replace('/onboarding');
-    } catch (e: unknown) {
+    } catch (e: any) {
       console.error('[SignUp] error', e);
-      Alert.alert('Sign up failed', 'Please try again.');
+      const msg: string = (typeof e?.message === 'string' ? e.message : '') + ' ' + (typeof e?.error_description === 'string' ? e.error_description : '');
+      if (/already\s*registered|already\s*exists|user\s*already|exists\s*\(|23505/i.test(msg)) {
+        Alert.alert('Email already registered', 'This email is already in use. Please log in instead.', [
+          { text: 'Go to Log In', onPress: () => router.replace('/log-in') },
+          { text: 'OK' },
+        ]);
+      } else {
+        Alert.alert('Sign up failed', 'Please try again.');
+      }
     } finally {
       setLoading(false);
     }
