@@ -21,25 +21,27 @@ type WebAudio = {
 // Royalty-free tracks (Free Music Archive / public domain friendly sources)
 // These URLs permit streaming and are suitable for mindfulness sessions.
 const TRACKS = [
+  // User imported tracks (from /public/user_music)
   {
-    title: 'Calm Fitness — Background Music',
-    uri: 'https://cdn.pixabay.com/download/audio/2023/10/17/audio_2d1b9aefc9.mp3?filename=groove-sports-breezy-fitness-flowing-calm-music-93682.mp3',
+    title: 'User: Gym Workout Sport',
+    uri: '/user_music/gym-workout-sport-music-426803.mp3',
   },
+  {
+    title: 'User: Inspiring Motivation',
+    uri: '/user_music/inspiring-motivation-music-432213.mp3',
+  },
+  {
+    title: 'User: Positive Motivation',
+    uri: '/user_music/positive-motivation-427893.mp3',
+  },
+  {
+    title: 'User: Workout',
+    uri: '/user_music/workout-172774.mp3',
+  },
+  // Kept defaults
   {
     title: 'Calm Fitness — Local',
     uri: '/calm_fitness.mp3',
-  },
-  {
-    title: 'Breathe — Komiku (FMA)',
-    uri: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Komiku/Relax/Komiku_-_04_-_Breathe.mp3',
-  },
-  {
-    title: 'Calm and Peaceful — Bensound (Preview)',
-    uri: 'https://cdn.pixabay.com/download/audio/2023/02/23/audio_aa7f2f66e9.mp3?filename=calm-meditation-141316.mp3',
-  },
-  {
-    title: 'Ambient Peace — Lesfm (Pixabay)',
-    uri: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_0d2fa2e6e5.mp3?filename=relaxing-meditation-music-zen-111237.mp3',
   },
 ];
 
@@ -58,7 +60,7 @@ export default function MindfulEatingScreen() {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => themedStyles(theme, mode), [theme, mode]);
 
-  const [totalSeconds] = useState<number>(20 * 60);
+  const [totalSeconds, setTotalSeconds] = useState<number>(20 * 60);
   const [remaining, setRemaining] = useState<number>(20 * 60);
   const [running, setRunning] = useState<boolean>(false);
   const [trackIndex, setTrackIndex] = useState<number>(0);
@@ -352,6 +354,26 @@ export default function MindfulEatingScreen() {
 
         <View style={styles.bottomSection}>
           <View style={styles.controlsSection}>
+            <View style={styles.durationRow}>
+              {[5, 10, 15, 20, 30].map((m) => (
+                <TouchableOpacity
+                  key={m}
+                  accessibilityRole="button"
+                  onPress={() => {
+                    if (running) setRunning(false);
+                    const s = m * 60;
+                    setTotalSeconds(s);
+                    setRemaining(s);
+                  }}
+                  style={[
+                    styles.durationChip,
+                    totalSeconds === m * 60 && styles.durationChipActive,
+                  ]}
+                >
+                  <Text style={styles.durationChipText}>{m}m</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
             <View style={styles.trackRow}>
               <TouchableOpacity accessibilityRole="button" onPress={prevTrack} style={styles.trackBtn} testID="track-prev">
                 <Text style={styles.trackBtnText}>{'◀︎'}</Text>
@@ -516,6 +538,30 @@ const themedStyles = (theme: any, mode: string) => StyleSheet.create({
   },
   controlsSection: {
     gap: 16,
+  },
+  durationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  durationChip: {
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+    borderWidth: 1,
+    borderColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+  },
+  durationChipActive: {
+    backgroundColor: '#4A90E2',
+    borderColor: '#4A90E2',
+  },
+  durationChipText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.text,
   },
   trackRow: {
     flexDirection: 'row',
