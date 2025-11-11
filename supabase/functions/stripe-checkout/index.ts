@@ -1,8 +1,12 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import Stripe from 'npm:stripe@17.7.0';
-import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
+import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  // Use SERVICE_ROLE_KEY since Supabase forbids secrets starting with SUPABASE_
+  Deno.env.get('SERVICE_ROLE_KEY') ?? ''
+);
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
 const stripe = new Stripe(stripeSecret, {
   appInfo: {
@@ -33,7 +37,7 @@ function corsResponse(body: string | object | null, status = 200) {
   });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   try {
     if (req.method === 'OPTIONS') {
       return corsResponse({}, 204);

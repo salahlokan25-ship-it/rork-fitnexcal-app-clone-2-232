@@ -1,6 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import Stripe from 'npm:stripe@17.7.0';
-import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
+import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
 const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
@@ -11,9 +11,13 @@ const stripe = new Stripe(stripeSecret, {
   },
 });
 
-const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  // Use SERVICE_ROLE_KEY because Supabase forbids secrets starting with SUPABASE_
+  Deno.env.get('SERVICE_ROLE_KEY')!
+);
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   try {
     // Handle OPTIONS request for CORS preflight
     if (req.method === 'OPTIONS') {
@@ -44,12 +48,18 @@ Deno.serve(async (req) => {
       return new Response(`Webhook signature verification failed: ${error.message}`, { status: 400 });
     }
 
-    EdgeRuntime.waitUntil(handleEvent(event));
+    // Kick off processing without blocking the response
+    handleEvent(event);
 
-    return Response.json({ received: true });
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { 'content-type': 'application/json' },
+    });
   } catch (error: any) {
     console.error('Error processing webhook:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
   }
 });
 
@@ -138,33 +148,22 @@ async function syncCustomerFromStripe(customerId: string) {
     // TODO verify if needed
     if (subscriptions.data.length === 0) {
       console.info(`No active subscriptions found for customer: ${customerId}`);
-      const { error: noSubError } = await supabase.from('stripe_subscriptions').upsert(
-        {
-          customer_id: customerId,
-          subscription_status: 'not_started',
-        },
-        {
-          onConflict: 'customer_id',
-        },
-      );
-
-      if (noSubError) {
-        console.error('Error updating subscription status:', noSubError);
-        throw new Error('Failed to update subscription status in database');
-      }
+      // mark profile as not premium
+      await setPremiumForCustomer(customerId, false);
+      return;
     }
 
     // assumes that a customer can only have a single subscription
     const subscription = subscriptions.data[0];
 
     // store subscription state
-    const { error: subError } = await supabase.from('stripe_subscriptions').upsert(
+    const { error: subError } = await supabase.from('subscriptions').upsert(
       {
-        customer_id: customerId,
-        subscription_id: subscription.id,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscription.id,
         price_id: subscription.items.data[0].price.id,
-        current_period_start: subscription.current_period_start,
-        current_period_end: subscription.current_period_end,
+        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
         cancel_at_period_end: subscription.cancel_at_period_end,
         ...(subscription.default_payment_method && typeof subscription.default_payment_method !== 'string'
           ? {
@@ -174,18 +173,35 @@ async function syncCustomerFromStripe(customerId: string) {
           : {}),
         status: subscription.status,
       },
-      {
-        onConflict: 'customer_id',
-      },
+      { onConflict: 'stripe_subscription_id' }
     );
 
     if (subError) {
       console.error('Error syncing subscription:', subError);
       throw new Error('Failed to sync subscription in database');
     }
+    // premium if status active or trialing
+    const isPremium = subscription.status === 'active' || subscription.status === 'trialing';
+    await setPremiumForCustomer(customerId, isPremium);
     console.info(`Successfully synced subscription for customer: ${customerId}`);
   } catch (error) {
     console.error(`Failed to sync subscription for customer ${customerId}:`, error);
     throw error;
+  }
+}
+
+async function setPremiumForCustomer(customerId: string, isPremium: boolean) {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('stripe_customer_id', customerId)
+    .maybeSingle();
+  if (profile?.id) {
+    const { error } = await supabase.from('profiles').update({ is_premium: isPremium, updated_at: new Date().toISOString() }).eq('id', profile.id);
+    if (error) {
+      console.error('Error updating profiles.is_premium:', error);
+    }
+    // also attach user_id to subscriptions rows with this customer
+    await supabase.from('subscriptions').update({ user_id: profile.id }).eq('stripe_customer_id', customerId);
   }
 }

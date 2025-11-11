@@ -150,7 +150,7 @@ export default function TrackSleepScreen() {
           ),
           headerRight: () => (
             <TouchableOpacity 
-              onPress={() => {}}
+              onPress={() => router.push('/track-sleep-history')}
               style={{ paddingRight: 16 }}
             >
               <Calendar size={24} color={theme.colors.text} />

@@ -1,14 +1,48 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { Stack, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/theme';
+import { supabase } from '@/lib/supabase';
 
 export default function SubscriptionScreen() {
   const insets = useSafeAreaInsets();
   const { theme, mode } = useTheme();
   const [annual, setAnnual] = useState<boolean>(true);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const styles = useMemo(() => themedStyles(theme, mode), [theme, mode]);
+
+  const PRICES = {
+    pro_monthly: 'price_1SHAnn5zRnOqdXkPXmwWY4X8',
+    pro_yearly: 'price_1SHAoD5zRnOqdXkPTCR8a225',
+    premium_monthly: 'price_1SRYKA5zRnOqdXkPjjwTRvzA',
+    premium_yearly: 'price_1SRYKc5zRnOqdXkPrd5zHNaF',
+  } as const;
+
+  const startCheckout = async (plan: 'Pro' | 'Premium') => {
+    try {
+      const key = `${plan.toLowerCase()}_${annual ? 'yearly' : 'monthly'}` as keyof typeof PRICES;
+      const priceId = PRICES[key];
+      setLoadingPlan(`${plan}-${annual ? 'yearly' : 'monthly'}`);
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: {
+          priceId,
+          planName: `${plan} ${annual ? 'Yearly' : 'Monthly'}`,
+          success_url: 'myapp://billing/success',
+          cancel_url: 'myapp://billing/cancel',
+        },
+      });
+      if (error) throw error;
+      const url = (data as any)?.url;
+      if (!url) throw new Error('No checkout URL received');
+      await WebBrowser.openBrowserAsync(url);
+    } catch (e: any) {
+      Alert.alert('Checkout error', typeof e?.message === 'string' ? e.message : 'Please try again.');
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]}> 
@@ -52,6 +86,8 @@ export default function SubscriptionScreen() {
               'Advanced Nutrient Tracking',
               'Custom Meal Plans',
             ]}
+            onPress={() => startCheckout('Pro')}
+            loading={loadingPlan === `Pro-${annual ? 'yearly' : 'monthly'}`}
           />
 
           <PlanCard
@@ -61,13 +97,15 @@ export default function SubscriptionScreen() {
             period={annual ? '/year' : '/month'}
             subtitle={annual ? 'Billed annually, or $14.99/month.' : 'Billed monthly.'}
             primary
-            ctaLabel="Start 7-Day Free Trial"
+            ctaLabel="Upgrade to Premium"
             features={[
               'All Pro features',
               'Personalized Coaching',
               'Recipe Integration',
               'Priority Support',
             ]}
+            onPress={() => startCheckout('Premium')}
+            loading={loadingPlan === `Premium-${annual ? 'yearly' : 'monthly'}`}
           />
         </View>
 
@@ -94,7 +132,7 @@ export default function SubscriptionScreen() {
   );
 }
 
-function PlanCard({ title, badge, price, period, subtitle, primary, ctaLabel, features }: { title: string; badge: string; price: string; period: string; subtitle: string; primary?: boolean; ctaLabel: string; features: string[] }) {
+function PlanCard({ title, badge, price, period, subtitle, primary, ctaLabel, features, onPress, loading }: { title: string; badge: string; price: string; period: string; subtitle: string; primary?: boolean; ctaLabel: string; features: string[]; onPress: () => void; loading?: boolean }) {
   const { theme, mode } = useTheme();
   return (
     <View style={[{
@@ -122,13 +160,14 @@ function PlanCard({ title, badge, price, period, subtitle, primary, ctaLabel, fe
 
       <TouchableOpacity
         style={{ marginTop: 12, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: primary ? theme.colors.primary700 : (mode === 'dark' ? '#232f48' : 'rgba(0,0,0,0.06)') }}
-        onPress={() => {
-          // TODO: Implement actual purchase flow
-          // For now, just navigate to home
-          router.replace('/(tabs)/home');
-        }}
+        onPress={onPress}
+        disabled={!!loading}
       >
-        <Text style={{ color: primary ? '#fff' : (mode === 'dark' ? '#ffffff' : theme.colors.text), fontWeight: '700' }}>{ctaLabel}</Text>
+        {loading ? (
+          <ActivityIndicator color={primary ? '#fff' : (mode === 'dark' ? '#ffffff' : theme.colors.text)} />
+        ) : (
+          <Text style={{ color: primary ? '#fff' : (mode === 'dark' ? '#ffffff' : theme.colors.text), fontWeight: '700' }}>{ctaLabel}</Text>
+        )}
       </TouchableOpacity>
 
       <View style={{ gap: 8, marginTop: 12 }}>
