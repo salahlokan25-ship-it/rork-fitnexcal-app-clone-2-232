@@ -33,8 +33,8 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
         };
 
         // default styles for regular tabs
-        const inactiveText = 'rgba(255,255,255,0.9)';
-        const activeText = '#FFFFFF';
+        const inactiveText = theme.colors.textMuted;
+        const activeText = theme.colors.text;
         const color = isFocused ? activeText : inactiveText;
         const iconSize = 22 as const;
         const Icon = options.tabBarIcon as
@@ -159,14 +159,14 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 10,
     paddingBottom: 16,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: Theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border,
     shadowColor: '#000000',
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: -4 },
-    shadowRadius: 16,
-    elevation: 10,
+    shadowRadius: 6,
+    elevation: 6,
   },
   tabItemWrapper: {
     flex: 1,
@@ -185,14 +185,14 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 64,
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: Theme.colors.primary700,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000000',
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.25,
     shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 12,
-    elevation: 14,
+    shadowRadius: 10,
+    elevation: 10,
     borderWidth: 1,
     borderColor: Theme.colors.border,
   },
@@ -211,10 +211,10 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     paddingHorizontal: 4,
   },
   pillActive: {
-    backgroundColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: Theme.colors.primary300,
   },
   pillInactive: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: Theme.colors.surface,
   },
   iconWrapper: {
     marginBottom: 4,
@@ -222,7 +222,7 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '700',
-    opacity: 0.95,
+    opacity: 1,
   },
 });
 

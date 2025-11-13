@@ -44,14 +44,14 @@ export default function ScanScreen() {
     };
 
     return (
-      <View style={[styles.container, { backgroundColor: '#101922' }]}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <SafeAreaView edges={['top']} style={styles.header}>
           <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
-            <ArrowLeft size={24} color="white" />
+            <ArrowLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Scan Food</Text>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Scan Food</Text>
           <TouchableOpacity style={styles.headerButton}>
-            <Zap size={24} color="white" />
+            <Zap size={24} color={theme.colors.text} />
           </TouchableOpacity>
         </SafeAreaView>
 
@@ -90,8 +90,8 @@ export default function ScanScreen() {
             <Text style={styles.permissionInstructionText}>
               Center your meal in the frame and tap the button to capture.
             </Text>
-            <TouchableOpacity testID="grant-permission" style={styles.grantButton} onPress={handleRequestPermission}>
-              <Text style={styles.grantButtonText}>Grant Camera Access</Text>
+            <TouchableOpacity testID="grant-permission" style={[styles.grantButton, { backgroundColor: theme.colors.primary700 }]} onPress={handleRequestPermission}>
+              <Text style={[styles.grantButtonText, { color: '#fff' }]}>Grant Camera Access</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -216,11 +216,8 @@ export default function ScanScreen() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Scan Food</Text>
-        <TouchableOpacity 
-          style={styles.headerButton} 
-          onPress={() => setFlashEnabled(!flashEnabled)}
-        >
-          <Zap size={24} color={flashEnabled ? '#137fec' : theme.colors.text} />
+        <TouchableOpacity style={styles.headerButton}>
+          <Zap size={24} color={flashEnabled ? theme.colors.primary700 : theme.colors.text} />
         </TouchableOpacity>
       </SafeAreaView>
 
@@ -241,7 +238,7 @@ export default function ScanScreen() {
 
           <View style={styles.controls}>
             <TouchableOpacity 
-              style={[styles.secondaryButton, { backgroundColor: theme.colors.surface }]} 
+              style={[styles.secondaryButton, { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }]} 
               onPress={pickImage}
             >
               <ImageIcon size={24} color={theme.colors.text} />
@@ -252,15 +249,15 @@ export default function ScanScreen() {
               onPress={takePicture}
               disabled={isAnalyzing}
             >
-              <View style={styles.captureButtonOuter}>
-                <View style={styles.captureButtonInner}>
+              <View style={[styles.captureButtonOuter, { borderColor: theme.colors.primary700, backgroundColor: 'transparent' }]}>
+                <View style={[styles.captureButtonInner, { backgroundColor: theme.colors.primary700 }]}>
                   <Camera size={32} color="white" strokeWidth={2} fill="white" />
                 </View>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.secondaryButton, { backgroundColor: theme.colors.surface }]} 
+              style={[styles.secondaryButton, { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }]} 
               onPress={toggleCameraFacing}
             >
               <FlipHorizontal size={24} color={theme.colors.text} />
