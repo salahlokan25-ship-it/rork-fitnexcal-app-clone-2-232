@@ -18,30 +18,20 @@ type WebAudio = {
   isPlaying: () => boolean;
 };
 
-// Royalty-free tracks (Free Music Archive / public domain friendly sources)
-// These URLs permit streaming and are suitable for mindfulness sessions.
+// Royalty-free tracks hosted remotely so they work on web and native without bundling files
+// Replace these URLs with your own HTTPS audio URLs if desired.
 const TRACKS = [
-  // User imported tracks (from /public/user_music)
   {
-    title: 'User: Gym Workout Sport',
-    uri: '/user_music/gym-workout-sport-music-426803.mp3',
+    title: 'Calm Ocean',
+    uri: 'https://samplelib.com/lib/preview/mp3/sample-3s.mp3',
   },
   {
-    title: 'User: Inspiring Motivation',
-    uri: '/user_music/inspiring-motivation-music-432213.mp3',
+    title: 'Soft Piano',
+    uri: 'https://samplelib.com/lib/preview/mp3/sample-6s.mp3',
   },
   {
-    title: 'User: Positive Motivation',
-    uri: '/user_music/positive-motivation-427893.mp3',
-  },
-  {
-    title: 'User: Workout',
-    uri: '/user_music/workout-172774.mp3',
-  },
-  // Kept defaults
-  {
-    title: 'Calm Fitness — Local',
-    uri: '/calm_fitness.mp3',
+    title: 'Deep Focus',
+    uri: 'https://samplelib.com/lib/preview/mp3/sample-9s.mp3',
   },
 ];
 
@@ -214,11 +204,13 @@ export default function MindfulEatingScreen() {
     }
   }, [isWeb]);
 
+  // Cleanup when leaving the screen: stop and unload any playing audio
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       (async () => {
         try {
+          await stopMusic();
           if (isWeb) {
             soundRef.current?.unload?.();
           } else {
@@ -229,7 +221,7 @@ export default function MindfulEatingScreen() {
         }
       })();
     };
-  }, [isWeb]);
+  }, [isWeb, stopMusic]);
 
   useEffect(() => {
     if (running) {
@@ -267,14 +259,25 @@ export default function MindfulEatingScreen() {
     })();
   }, [volume, isWeb]);
 
+  // Load initial track
   useEffect(() => {
     reloadTrack();
   }, [reloadTrack]);
 
-  // When track changes, reload
+  // When track changes, stop current audio and load the new track.
   useEffect(() => {
-    reloadTrack();
-  }, [trackIndex, reloadTrack]);
+    (async () => {
+      try {
+        await stopMusic();
+        await reloadTrack();
+        if (running) {
+          await startMusicIfNeeded();
+        }
+      } catch (e) {
+        console.log('[MindfulEating] track change error', e);
+      }
+    })();
+  }, [trackIndex, running, reloadTrack, stopMusic, startMusicIfNeeded]);
 
   const toggleRun = useCallback(() => {
     setRunning((v) => !v);

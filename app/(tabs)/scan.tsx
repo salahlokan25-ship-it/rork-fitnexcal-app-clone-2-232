@@ -44,14 +44,14 @@ export default function ScanScreen() {
     };
 
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.container, { backgroundColor: '#101922' }]}>
         <SafeAreaView edges={['top']} style={styles.header}>
           <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
-            <ArrowLeft size={24} color={theme.colors.text} />
+            <ArrowLeft size={24} color="white" />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Scan Food</Text>
+          <Text style={styles.headerTitle}>Scan Food</Text>
           <TouchableOpacity style={styles.headerButton}>
-            <Zap size={24} color={theme.colors.text} />
+            <Zap size={24} color="white" />
           </TouchableOpacity>
         </SafeAreaView>
 
@@ -90,8 +90,8 @@ export default function ScanScreen() {
             <Text style={styles.permissionInstructionText}>
               Center your meal in the frame and tap the button to capture.
             </Text>
-            <TouchableOpacity testID="grant-permission" style={[styles.grantButton, { backgroundColor: theme.colors.primary700 }]} onPress={handleRequestPermission}>
-              <Text style={[styles.grantButtonText, { color: '#fff' }]}>Grant Camera Access</Text>
+            <TouchableOpacity testID="grant-permission" style={styles.grantButton} onPress={handleRequestPermission}>
+              <Text style={styles.grantButtonText}>Grant Camera Access</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -100,7 +100,7 @@ export default function ScanScreen() {
   }
 
   const takePicture = async () => {
-    if (!cameraRef.current) return;
+    if (!cameraRef.current || isAnalyzing) return;
 
     try {
       const photo = await cameraRef.current.takePictureAsync({
@@ -108,9 +108,9 @@ export default function ScanScreen() {
         base64: true,
       });
 
-      if (photo?.base64) {
+      if (photo?.base64 && photo.uri) {
         setCapturedImage(photo.uri);
-        await analyzeImage(photo.base64);
+        await analyzeImage(photo.base64, photo.uri);
       }
     } catch (error) {
       console.error('Error taking picture:', error);
@@ -119,6 +119,7 @@ export default function ScanScreen() {
   };
 
   const pickImage = async () => {
+    if (isAnalyzing) return;
     try {
       console.log('[Scan] Requesting media library permission');
       const mediaPerm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -143,9 +144,9 @@ export default function ScanScreen() {
         base64: true,
       });
 
-      if (!result.canceled && result.assets[0]?.base64) {
+      if (!result.canceled && result.assets[0]?.base64 && result.assets[0].uri) {
         setCapturedImage(result.assets[0].uri ?? null);
-        await analyzeImage(result.assets[0].base64);
+        await analyzeImage(result.assets[0].base64, result.assets[0].uri);
       }
     } catch (error) {
       console.error('Error picking image:', error);
@@ -153,7 +154,8 @@ export default function ScanScreen() {
     }
   };
 
-  const analyzeImage = async (base64Image: string) => {
+  const analyzeImage = async (base64Image: string, imageUri: string) => {
+    if (isAnalyzing) return;
     setIsAnalyzing(true);
     
     try {
@@ -167,13 +169,11 @@ export default function ScanScreen() {
         return;
       }
 
-      const dataUrl = `data:image/jpeg;base64,${base64Image}`;
-
       router.push({
         pathname: '/food-analysis',
         params: {
           analysis: JSON.stringify(analysis),
-          imageUri: dataUrl,
+          imageUri,
         },
       });
     } catch (error) {
@@ -184,7 +184,6 @@ export default function ScanScreen() {
       );
     } finally {
       setIsAnalyzing(false);
-      setCapturedImage(null);
     }
   };
 
@@ -216,8 +215,11 @@ export default function ScanScreen() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Scan Food</Text>
-        <TouchableOpacity style={styles.headerButton}>
-          <Zap size={24} color={flashEnabled ? theme.colors.primary700 : theme.colors.text} />
+        <TouchableOpacity 
+          style={styles.headerButton} 
+          onPress={() => setFlashEnabled(!flashEnabled)}
+        >
+          <Zap size={24} color={flashEnabled ? '#137fec' : theme.colors.text} />
         </TouchableOpacity>
       </SafeAreaView>
 
@@ -238,7 +240,7 @@ export default function ScanScreen() {
 
           <View style={styles.controls}>
             <TouchableOpacity 
-              style={[styles.secondaryButton, { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }]} 
+              style={[styles.secondaryButton, { backgroundColor: theme.colors.surface }]} 
               onPress={pickImage}
             >
               <ImageIcon size={24} color={theme.colors.text} />
@@ -249,15 +251,15 @@ export default function ScanScreen() {
               onPress={takePicture}
               disabled={isAnalyzing}
             >
-              <View style={[styles.captureButtonOuter, { borderColor: theme.colors.primary700, backgroundColor: 'transparent' }]}>
-                <View style={[styles.captureButtonInner, { backgroundColor: theme.colors.primary700 }]}>
+              <View style={styles.captureButtonOuter}>
+                <View style={styles.captureButtonInner}>
                   <Camera size={32} color="white" strokeWidth={2} fill="white" />
                 </View>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.secondaryButton, { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }]} 
+              style={[styles.secondaryButton, { backgroundColor: theme.colors.surface }]} 
               onPress={toggleCameraFacing}
             >
               <FlipHorizontal size={24} color={theme.colors.text} />

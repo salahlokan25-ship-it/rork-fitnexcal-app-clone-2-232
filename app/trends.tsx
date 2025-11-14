@@ -271,7 +271,8 @@ export default function TrendsScreen() {
 }
 
 function WeightChart({ data, width, height }: { data: number[]; width: number; height: number; theme: any }) {
-  if (data.length === 0) return null;
+  // Need at least two points to draw a curve reliably
+  if (!data || data.length < 2) return null;
 
   const chartWidth = width;
   const chartHeight = height;
@@ -279,6 +280,11 @@ function WeightChart({ data, width, height }: { data: number[]; width: number; h
   const min = Math.min(...data) - 2;
   const max = Math.max(...data) + 2;
   const range = max - min;
+
+  // Avoid division by zero / NaN in case all values are equal or invalid
+  if (!isFinite(range) || range === 0) {
+    return null;
+  }
 
   const points = data.map((value, index) => {
     const x = (index / (data.length - 1)) * chartWidth;

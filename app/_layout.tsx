@@ -1,5 +1,4 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
@@ -66,15 +65,13 @@ export default function RootLayout() {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={styles.container}>
-          <ErrorBoundary>
-            <UserProvider>
-              <ThemeProvider>
-                <I18nProvider>
-                  <RootLayoutNav />
-                </I18nProvider>
-              </ThemeProvider>
-            </UserProvider>
-          </ErrorBoundary>
+          <UserProvider>
+            <ThemeProvider>
+              <I18nProvider>
+                <RootLayoutNav />
+              </I18nProvider>
+            </ThemeProvider>
+          </UserProvider>
         </GestureHandlerRootView>
       </QueryClientProvider>
     </trpc.Provider>

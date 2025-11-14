@@ -33,8 +33,8 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
         };
 
         // default styles for regular tabs
-        const inactiveText = theme.colors.textMuted;
-        const activeText = theme.colors.text;
+        const inactiveText = 'rgba(255,255,255,0.9)';
+        const activeText = '#FFFFFF';
         const color = isFocused ? activeText : inactiveText;
         const iconSize = 22 as const;
         const Icon = options.tabBarIcon as
@@ -159,14 +159,14 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 10,
     paddingBottom: 16,
-    backgroundColor: Theme.colors.surface,
+    backgroundColor: 'rgba(13,16,20,0.95)',
     borderTopWidth: 1,
-    borderTopColor: Theme.colors.border,
+    borderTopColor: 'rgba(255,255,255,0.06)',
     shadowColor: '#000000',
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.25,
     shadowOffset: { width: 0, height: -4 },
-    shadowRadius: 6,
-    elevation: 6,
+    shadowRadius: 16,
+    elevation: 10,
   },
   tabItemWrapper: {
     flex: 1,
@@ -185,20 +185,20 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 64,
-    backgroundColor: Theme.colors.primary700,
+    backgroundColor: 'rgba(37,99,235,0.95)',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000000',
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.35,
     shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 10,
-    elevation: 10,
+    shadowRadius: 12,
+    elevation: 14,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   centerLabel: {
     marginTop: 4,
-    color: Theme.colors.text,
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -211,10 +211,10 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     paddingHorizontal: 4,
   },
   pillActive: {
-    backgroundColor: Theme.colors.primary300,
+    backgroundColor: 'rgba(255,255,255,0.10)',
   },
   pillInactive: {
-    backgroundColor: Theme.colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   iconWrapper: {
     marginBottom: 4,
@@ -222,7 +222,7 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '700',
-    opacity: 1,
+    opacity: 0.95,
   },
 });
 

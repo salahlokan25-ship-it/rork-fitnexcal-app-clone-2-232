@@ -6,7 +6,6 @@ import { askNutritionQuestion } from '@/services/ai-service';
 import { useUser } from '@/hooks/user-store';
 import { useNutrition } from '@/hooks/nutrition-store';
 import { useRouter } from 'expo-router';
-import { useTheme } from '@/hooks/theme';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -37,7 +36,6 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const { user, authUser } = useUser();
   const { dailyNutrition } = useNutrition();
-  const { theme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -178,22 +176,22 @@ export default function ChatScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.header, { paddingTop: insets.top + 16, backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <TouchableOpacity 
           style={styles.headerButton}
           onPress={() => router.back()}
         >
-          <ArrowLeft size={24} color={theme.colors.text} opacity={0.8} />
+          <ArrowLeft size={24} color="#ffffff" opacity={0.8} />
         </TouchableOpacity>
         
         <View style={styles.headerCenter}>
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>NutriPal</Text>
-          <Text style={[styles.headerStatus, { color: theme.colors.primary600 }]}>Online</Text>
+          <Text style={styles.headerTitle}>NutriPal</Text>
+          <Text style={styles.headerStatus}>Online</Text>
         </View>
 
         <TouchableOpacity style={styles.headerButton}>
-          <MoreVertical size={24} color={theme.colors.text} opacity={0.8} />
+          <MoreVertical size={24} color="#ffffff" opacity={0.8} />
         </TouchableOpacity>
       </View>
 
@@ -229,16 +227,15 @@ export default function ChatScreen() {
                 styles.messageContent,
                 message.isUser ? styles.userMessageContent : styles.aiMessageContent
               ]}>
-                <Text style={[styles.messageLabel, { color: theme.colors.primary600 }]}>
+                <Text style={styles.messageLabel}>
                   {message.isUser ? 'You' : 'NutriPal'}
                 </Text>
                 
                 <View style={[
                   styles.messageBubble,
-                  message.isUser ? styles.userMessageBubble : styles.aiMessageBubble,
-                  { backgroundColor: message.isUser ? theme.colors.primary700 : theme.colors.surface, borderWidth: 1, borderColor: message.isUser ? 'transparent' : theme.colors.border }
+                  message.isUser ? styles.userMessageBubble : styles.aiMessageBubble
                 ]}>
-                  <Text style={[styles.messageText, { color: theme.colors.text }]}>
+                  <Text style={styles.messageText}>
                     {message.text}
                   </Text>
                 </View>
@@ -281,7 +278,7 @@ export default function ChatScreen() {
                 />
               </View>
               <View style={styles.messageContent}>
-                <View style={[styles.loadingBubble, { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }]}>
+                <View style={styles.loadingBubble}>
                   <TypingIndicator />
                 </View>
               </View>
@@ -289,7 +286,7 @@ export default function ChatScreen() {
           )}
         </ScrollView>
 
-        <View style={[styles.inputSection, { borderTopColor: theme.colors.border }]}>
+        <View style={styles.inputSection}>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -309,23 +306,23 @@ export default function ChatScreen() {
           </ScrollView>
 
           <View style={styles.inputContainer}>
-            <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }]}>
-              <Camera size={24} color={theme.colors.text} opacity={0.8} />
+            <TouchableOpacity style={styles.iconButton}>
+              <Camera size={24} color="#ffffff" opacity={0.8} />
             </TouchableOpacity>
 
             <View style={styles.inputWrapper}>
               <TextInput
-                style={[styles.textInput, { backgroundColor: theme.colors.surface, color: theme.colors.text }]}
+                style={styles.textInput}
                 value={inputText}
                 onChangeText={setInputText}
                 placeholder="Ask about food or a meal..."
-                placeholderTextColor={theme.colors.textMuted}
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
                 multiline
                 maxLength={500}
                 editable={!isLoading}
               />
               <TouchableOpacity
-                style={[styles.sendButton, { backgroundColor: theme.colors.primary700 }, (!inputText.trim() || isLoading) && styles.sendButtonDisabled]}
+                style={[styles.sendButton, (!inputText.trim() || isLoading) && styles.sendButtonDisabled]}
                 onPress={() => sendMessage(inputText)}
                 disabled={!inputText.trim() || isLoading}
               >
@@ -333,8 +330,8 @@ export default function ChatScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }]}>
-              <Mic size={24} color={theme.colors.text} opacity={0.8} />
+            <TouchableOpacity style={styles.iconButton}>
+              <Mic size={24} color="#ffffff" opacity={0.8} />
             </TouchableOpacity>
           </View>
         </View>

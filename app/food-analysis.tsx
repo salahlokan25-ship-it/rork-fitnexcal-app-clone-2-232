@@ -1,12 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Minus, Flame, Egg, Wheat, Droplets, ChevronLeft, Coffee, Sun, Moon, Cookie } from 'lucide-react-native';
 import { useNutrition } from '@/hooks/nutrition-store';
 import { FoodItem, MealEntry } from '@/types/nutrition';
-
-
 
 type AnalyzedFood = { name: string; calories: number; protein: number; carbs: number; fat: number; serving_size: string; confidence?: number; ingredients?: string[] };
 
@@ -15,12 +13,9 @@ type AnalysisPayload = { foods: AnalyzedFood[] };
 export default function FoodAnalysisScreen() {
   const { analysis: analysisParam, imageUri } = useLocalSearchParams();
   const { addMeal } = useNutrition();
-  
-  const [selectedMealType, setSelectedMealType] = useState<MealEntry['meal_type']>('breakfast');
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [isAdding, setIsAdding] = useState(false);
 
-  const analysis: AnalysisPayload = useMemo(() => {
+  // Parse analysis once into stable state so re-renders don't keep re-parsing
+  const [analysis] = useState<AnalysisPayload>(() => {
     if (!analysisParam) {
       return { foods: [] };
     }
@@ -30,18 +25,18 @@ export default function FoodAnalysisScreen() {
       console.error('Error parsing analysis:', error);
       return { foods: [] };
     }
-  }, [analysisParam]);
+  });
 
-  // Initialize quantities only once when analysis changes
-  React.useEffect(() => {
-    if (analysis.foods && analysis.foods.length > 0) {
-      const initialQuantities: Record<string, number> = {};
-      analysis.foods.forEach((food: AnalyzedFood, index: number) => {
-        initialQuantities[index.toString()] = 1;
-      });
-      setQuantities(initialQuantities);
-    }
-  }, [analysis.foods.length]); // Only depend on the length to avoid infinite loops
+  const [selectedMealType, setSelectedMealType] = useState<MealEntry['meal_type']>('breakfast');
+  const [quantities, setQuantities] = useState<Record<string, number>>(() => {
+    if (!analysis.foods || analysis.foods.length === 0) return {};
+    const initial: Record<string, number> = {};
+    analysis.foods.forEach((_food, index) => {
+      initial[index.toString()] = 1;
+    });
+    return initial;
+  });
+  const [isAdding, setIsAdding] = useState(false);
 
   if (!analysisParam) {
     return null;
