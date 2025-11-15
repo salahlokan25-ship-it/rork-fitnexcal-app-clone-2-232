@@ -12,18 +12,11 @@ export default function IndexScreen() {
   const [introSeen, setIntroSeen] = useState<boolean | null>(null);
   const [animationComplete, setAnimationComplete] = useState<boolean>(false);
 
-  const textScale = useRef<Animated.Value>(new Animated.Value(0.5)).current;
-  const textOpacity = useRef<Animated.Value>(new Animated.Value(0)).current;
-  const textGlow = useRef<Animated.Value>(new Animated.Value(0)).current;
-
-  const logoOpacity = useRef<Animated.Value>(new Animated.Value(0)).current;
-  const logoScale = useRef<Animated.Value>(new Animated.Value(0.3)).current;
-  const logoRotate = useRef<Animated.Value>(new Animated.Value(0)).current;
-  const logoGlow = useRef<Animated.Value>(new Animated.Value(0)).current;
-  
-  const particleAnim1 = useRef<Animated.Value>(new Animated.Value(0)).current;
-  const particleAnim2 = useRef<Animated.Value>(new Animated.Value(0)).current;
-  const particleAnim3 = useRef<Animated.Value>(new Animated.Value(0)).current;
+  // Simplified, professional intro animation
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const titleTranslateY = useRef(new Animated.Value(16)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0.85)).current;
 
   // Check intro_seen flag on mount
   useEffect(() => {
@@ -48,131 +41,45 @@ export default function IndexScreen() {
     }
 
     console.log('[IndexScreen] Starting splash animation');
+    // Slightly longer, smoother intro so the splash doesn't disappear too fast
+    const animDuration = Platform.OS === 'web' ? 500 : 900;
 
-    // Start particle animations
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(particleAnim1, {
-          toValue: 1,
-          duration: 3000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(particleAnim1, {
-          toValue: 0,
-          duration: 3000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-      ])
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(particleAnim2, {
-          toValue: 1,
-          duration: 4000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(particleAnim2, {
-          toValue: 0,
-          duration: 4000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-      ])
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(particleAnim3, {
-          toValue: 1,
-          duration: 5000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(particleAnim3, {
-          toValue: 0,
-          duration: 5000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-      ])
-    ).start();
-
-    // Main splash sequence with wow effects
-    const animDuration = Platform.OS === 'web' ? 400 : 800;
-    
     Animated.sequence([
-      // Phase 1: Text appears with glow
       Animated.parallel([
-        Animated.spring(textScale, {
-          toValue: 1.1,
-          friction: 4,
-          tension: 40,
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(textOpacity, {
+        Animated.timing(titleOpacity, {
           toValue: 1,
           duration: animDuration,
-          easing: Easing.out(Easing.exp),
+          easing: Easing.out(Easing.quad),
           useNativeDriver: Platform.OS !== 'web',
         }),
-        Animated.timing(textGlow, {
-          toValue: 1,
-          duration: animDuration * 1.5,
+        Animated.timing(titleTranslateY, {
+          toValue: 0,
+          duration: animDuration,
           easing: Easing.out(Easing.quad),
           useNativeDriver: Platform.OS !== 'web',
         }),
       ]),
-      Animated.delay(Platform.OS === 'web' ? 300 : 500),
-      // Phase 2: Text fades and logo appears with dramatic effect
       Animated.parallel([
-        Animated.timing(textOpacity, {
-          toValue: 0,
-          duration: animDuration / 2,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(textGlow, {
-          toValue: 0,
-          duration: animDuration / 2,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
         Animated.timing(logoOpacity, {
           toValue: 1,
           duration: animDuration,
-          easing: Easing.out(Easing.exp),
+          easing: Easing.out(Easing.quad),
           useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.spring(logoScale, {
           toValue: 1,
           friction: 5,
-          tension: 60,
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(logoRotate, {
-          toValue: 1,
-          duration: animDuration * 1.2,
-          easing: Easing.out(Easing.exp),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(logoGlow, {
-          toValue: 1,
-          duration: animDuration * 1.5,
-          easing: Easing.out(Easing.quad),
+          tension: 40,
           useNativeDriver: Platform.OS !== 'web',
         }),
       ]),
-      Animated.delay(Platform.OS === 'web' ? 400 : 800),
+      Animated.delay(Platform.OS === 'web' ? 500 : 800),
     ]).start(() => {
       console.log('[IndexScreen] Animation complete, setting states');
       setShowSplash(false);
       setAnimationComplete(true);
     });
-  }, [isLoading, introSeen, textOpacity, textScale, textGlow, logoOpacity, logoScale, logoRotate, logoGlow, particleAnim1, particleAnim2, particleAnim3]);
+  }, [isLoading, introSeen, titleOpacity, titleTranslateY, logoOpacity, logoScale]);
 
   // Navigate after animation completes
   useEffect(() => {
@@ -203,79 +110,37 @@ export default function IndexScreen() {
     }
   }, [animationComplete, introSeen, isAuthenticated, hasCompletedOnboarding]);
 
-  const rotateInterpolate = logoRotate.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['-20deg', '0deg'],
-  });
-
-  const textGlowOpacity = textGlow.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 0.8],
-  });
-
-  const logoGlowOpacity = logoGlow.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 0.9],
-  });
-
-  const particle1Y = particleAnim1.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-50, 50],
-  });
-
-  const particle2Y = particleAnim2.interpolate({
-    inputRange: [0, 1],
-    outputRange: [50, -50],
-  });
-
-  const particle3X = particleAnim3.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-40, 40],
-  });
-
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       {showSplash ? (
         <View style={styles.splashRoot} testID="splash-root">
-          {/* Animated particles in background */}
-          <Animated.View style={[styles.particle, { top: '20%', left: '15%', transform: [{ translateY: particle1Y }], opacity: 0.3 }]} />
-          <Animated.View style={[styles.particle, { top: '60%', right: '20%', transform: [{ translateY: particle2Y }], opacity: 0.25 }]} />
-          <Animated.View style={[styles.particle, { top: '40%', left: '70%', transform: [{ translateX: particle3X }], opacity: 0.2 }]} />
-          <Animated.View style={[styles.particleLarge, { top: '15%', right: '10%', transform: [{ translateY: particle2Y }], opacity: 0.15 }]} />
-          <Animated.View style={[styles.particleLarge, { bottom: '20%', left: '10%', transform: [{ translateX: particle3X }], opacity: 0.2 }]} />
-
+          <View style={styles.splashOverlay} />
           <View style={styles.splashCenter}>
-            {/* Text with glow effect */}
             <Animated.View
-              style={{
-                position: 'absolute',
-                opacity: textOpacity,
-                transform: [{ scale: textScale }],
-              }}
+              style={[
+                styles.brandWrapper,
+                {
+                  opacity: titleOpacity,
+                  transform: [{ translateY: titleTranslateY }],
+                },
+              ]}
               testID="splash-brand-wrapper"
             >
-              {/* Glow layers */}
-              <Animated.View style={[styles.textGlow, { opacity: textGlowOpacity }]}>
-                <Text style={[styles.splashText, styles.glowText]}>FitnexCal</Text>
-              </Animated.View>
-              <Animated.View style={[styles.textGlow2, { opacity: textGlowOpacity }]}>
-                <Text style={[styles.splashText, styles.glowText]}>FitnexCal</Text>
-              </Animated.View>
-              <Text style={styles.splashText} accessibilityRole="header" testID="splash-brand">FitnexCal</Text>
+              <Text style={styles.splashTitle}>FitnexCal</Text>
+              <Text style={styles.splashSubtitle}>Your AI-powered nutrition & fitness coach</Text>
             </Animated.View>
 
-            {/* Logo with glow effect */}
             <Animated.View
-              style={{
-                opacity: logoOpacity,
-                transform: [{ scale: logoScale }, { rotate: rotateInterpolate }],
-              }}
+              style={[
+                styles.logoWrapper,
+                {
+                  opacity: logoOpacity,
+                  transform: [{ scale: logoScale }],
+                },
+              ]}
               testID="splash-logo-wrapper"
             >
-              {/* Logo glow layers */}
-              <Animated.View style={[styles.logoGlow, { opacity: logoGlowOpacity }]} />
-              <Animated.View style={[styles.logoGlow2, { opacity: logoGlowOpacity }]} />
               <Image
                 source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ao6dpw1jgh0i6gq6fseo0' }}
                 style={styles.logo}
@@ -306,8 +171,12 @@ const styles = StyleSheet.create({
   },
   splashRoot: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#020617',
     position: 'relative',
+  },
+  splashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15,23,42,0.85)',
   },
   splashCenter: {
     flex: 1,
@@ -315,130 +184,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 10,
   },
-  splashText: {
-    fontSize: 42,
-    fontWeight: '900' as const,
-    color: '#FFFFFF',
-    letterSpacing: 1,
+  brandWrapper: {
+    alignItems: 'center',
+    marginBottom: 32,
   },
-  glowText: {
-    color: '#4A90E2',
+  splashTitle: {
+    fontSize: 34,
+    fontWeight: '800',
+    color: '#F9FAFB',
+    letterSpacing: 0.6,
   },
-  textGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  splashSubtitle: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  logoWrapper: {
+    width: 160,
+    height: 160,
+    borderRadius: 48,
+    backgroundColor: '#020617',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: '#4A90E2',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 1,
-        shadowRadius: 20,
-      },
-      android: {
-        elevation: 20,
-      },
-      web: {
-        filter: 'blur(20px)',
-      },
-    }),
-  },
-  textGlow2: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#4A90E2',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.8,
+        shadowColor: '#0EA5E9',
+        shadowOffset: { width: 0, height: 18 },
+        shadowOpacity: 0.35,
         shadowRadius: 40,
       },
       android: {
-        elevation: 30,
-      },
-      web: {
-        filter: 'blur(40px)',
+        elevation: 10,
       },
     }),
   },
   logo: {
-    width: 180,
-    height: 180,
-    borderRadius: 30,
-  },
-  logoGlow: {
-    position: 'absolute',
-    top: -20,
-    left: -20,
-    right: -20,
-    bottom: -20,
-    backgroundColor: '#4A90E2',
-    borderRadius: 50,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#4A90E2',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.8,
-        shadowRadius: 30,
-      },
-      android: {
-        elevation: 25,
-      },
-      web: {
-        filter: 'blur(30px)',
-      },
-    }),
-  },
-  logoGlow2: {
-    position: 'absolute',
-    top: -40,
-    left: -40,
-    right: -40,
-    bottom: -40,
-    backgroundColor: '#4A90E2',
-    borderRadius: 70,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#4A90E2',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.5,
-        shadowRadius: 50,
-      },
-      android: {
-        elevation: 35,
-      },
-      web: {
-        filter: 'blur(50px)',
-      },
-    }),
-  },
-  particle: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#4A90E2',
-    ...Platform.select({
-      web: {
-        filter: 'blur(20px)',
-      },
-    }),
-  },
-  particleLarge: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#6B5FCD',
-    ...Platform.select({
-      web: {
-        filter: 'blur(30px)',
-      },
-    }),
+    width: 120,
+    height: 120,
+    borderRadius: 32,
   },
 });
