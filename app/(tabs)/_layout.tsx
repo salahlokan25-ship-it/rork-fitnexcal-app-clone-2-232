@@ -6,8 +6,8 @@ import { useTheme } from '@/hooks/theme';
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
   console.log('[CustomTabBar] render', { index: state.index, routes: state.routes.map((r: any) => r.name) });
-  const { theme } = useTheme();
-  const styles = stylesWithTheme(theme);
+  const { theme, mode } = useTheme();
+  const styles = stylesWithTheme(theme, mode);
 
   return (
     <View style={styles.tabBarContainer} testID="custom-tab-bar">
@@ -33,8 +33,8 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
         };
 
         // default styles for regular tabs
-        const inactiveText = 'rgba(255,255,255,0.9)';
-        const activeText = '#FFFFFF';
+        const inactiveText = mode === 'dark' ? 'rgba(255,255,255,0.9)' : theme.colors.textMuted;
+        const activeText = mode === 'dark' ? '#FFFFFF' : theme.colors.primary700;
         const color = isFocused ? activeText : inactiveText;
         const iconSize = 22 as const;
         const Icon = options.tabBarIcon as
@@ -42,7 +42,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           | undefined;
 
         if (route.name === 'scan') {
-          const centerActiveColor = '#FFFFFF' as const;
+          const centerPlusColor = '#FFFFFF';
           return (
             <View key={route.key} style={styles.centerSlot}>
               <TouchableOpacity
@@ -54,7 +54,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                 style={styles.centerButtonWrapper}
               >
                 <View style={styles.centerButton}>
-                  <Plus color={centerActiveColor} size={30} />
+                  <Plus color={centerPlusColor} size={30} />
                 </View>
                 <Text style={styles.centerLabel}>Scan</Text>
               </TouchableOpacity>
@@ -129,7 +129,7 @@ function RootLayoutNav() {
       <Tabs.Screen
         name="chat"
         options={{
-          title: 'Chat',
+          title: 'FitnexCal Coach',
           tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
         }}
       />
@@ -151,7 +151,7 @@ function RootLayoutNav() {
   );
 }
 
-const stylesWithTheme = (Theme: any) => StyleSheet.create({
+const stylesWithTheme = (Theme: any, mode: 'light' | 'dark') => StyleSheet.create({
   tabBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -159,9 +159,9 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 10,
     paddingBottom: 16,
-    backgroundColor: 'rgba(13,16,20,0.95)',
+    backgroundColor: mode === 'dark' ? 'rgba(13,16,20,0.95)' : Theme.colors.surface,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
+    borderTopColor: mode === 'dark' ? 'rgba(255,255,255,0.06)' : Theme.colors.cardBorder,
     shadowColor: '#000000',
     shadowOpacity: 0.25,
     shadowOffset: { width: 0, height: -4 },
@@ -211,10 +211,10 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     paddingHorizontal: 4,
   },
   pillActive: {
-    backgroundColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(15,23,42,0.05)',
   },
   pillInactive: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'transparent',
   },
   iconWrapper: {
     marginBottom: 4,

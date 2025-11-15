@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Modal, Switch } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Edit, ChevronRight, TrendingUp, Flame, Target, Activity, Key, FileText, Shield, Info, PieChart, Droplets, Dumbbell, Beaker, Sprout, Crown } from 'lucide-react-native';
 import { useUser } from '@/hooks/user-store';
@@ -12,7 +12,7 @@ import { Image } from 'expo-image';
 export default function SettingsScreen() {
   console.log('[SettingsScreen] render');
   const { user, signOut, authUser, updateUser, isLoading } = useUser();
-  const { theme } = useTheme();
+  const { theme, mode, setMode } = useTheme();
   const insets = useSafeAreaInsets();
   const [showAvatarPicker, setShowAvatarPicker] = useState<boolean>(false);
 
@@ -154,6 +154,26 @@ export default function SettingsScreen() {
               </View>
               <ChevronRight size={20} color={theme.colors.textMuted} />
             </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={dynamic.sectionContainer}>
+          <Text style={dynamic.sectionHeader}>Appearance</Text>
+          <View style={dynamic.cardContainer}>
+            <View style={dynamic.menuItem}>
+              <View style={dynamic.menuItemLeft}>
+                <View style={[dynamic.iconCircle, { backgroundColor: theme.colors.surface }]}>
+                  <Activity size={20} color={theme.colors.textMuted} />
+                </View>
+                <Text style={dynamic.menuItemText}>Dark Mode</Text>
+              </View>
+              <Switch
+                value={mode === 'dark'}
+                onValueChange={(value) => setMode(value ? 'dark' : 'light')}
+                thumbColor={mode === 'dark' ? theme.colors.primary700 : '#f4f4f5'}
+                trackColor={{ false: '#d4d4d8', true: theme.colors.primary300 }}
+              />
+            </View>
           </View>
         </View>
 

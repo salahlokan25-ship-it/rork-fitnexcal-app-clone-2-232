@@ -6,6 +6,7 @@ import { askNutritionQuestion } from '@/services/ai-service';
 import { useUser } from '@/hooks/user-store';
 import { useNutrition } from '@/hooks/nutrition-store';
 import { useRouter } from 'expo-router';
+import { useTheme } from '@/hooks/theme';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -33,13 +34,14 @@ const chatKeyFor = (email?: string | null) => `chat_history:${email?.toLowerCase
 
 export default function ChatScreen() {
   const router = useRouter();
+  const { theme, mode } = useTheme();
   const insets = useSafeAreaInsets();
   const { user, authUser } = useUser();
   const { dailyNutrition } = useNutrition();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: `Hello! I'm NutriPal, your personal nutrition assistant. Ask me anything about food, calories, or meal plans to get started!`,
+      text: `Hi, I'm FitnexCal Coach, your personal nutrition assistant. Ask me anything about food, calories, or meal plans to get started!`,
       isUser: false,
       timestamp: new Date(),
     }
@@ -176,8 +178,17 @@ export default function ChatScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+    <View style={[styles.container, { backgroundColor: mode === 'dark' ? '#111318' : theme.colors.background }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: insets.top + 16,
+            backgroundColor: mode === 'dark' ? '#111318' : theme.colors.surface,
+            borderBottomColor: mode === 'dark' ? 'rgba(255,255,255,0.1)' : theme.colors.border,
+          },
+        ]}
+      >
         <TouchableOpacity 
           style={styles.headerButton}
           onPress={() => router.back()}
@@ -186,13 +197,11 @@ export default function ChatScreen() {
         </TouchableOpacity>
         
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>NutriPal</Text>
+          <Text style={[styles.headerTitle, mode === 'light' && { color: theme.colors.text }]}>FitnexCal Coach</Text>
           <Text style={styles.headerStatus}>Online</Text>
         </View>
 
-        <TouchableOpacity style={styles.headerButton}>
-          <MoreVertical size={24} color="#ffffff" opacity={0.8} />
-        </TouchableOpacity>
+        <View style={{ width: 48, height: 48 }} />
       </View>
 
       <KeyboardAvoidingView 
@@ -223,19 +232,34 @@ export default function ChatScreen() {
                 </View>
               )}
 
-              <View style={[
-                styles.messageContent,
-                message.isUser ? styles.userMessageContent : styles.aiMessageContent
-              ]}>
+              <View
+                style={[
+                  styles.messageContent,
+                  message.isUser ? styles.userMessageContent : styles.aiMessageContent,
+                ]}
+              >
                 <Text style={styles.messageLabel}>
-                  {message.isUser ? 'You' : 'NutriPal'}
+                  {message.isUser ? 'You' : 'FitnexCal Coach'}
                 </Text>
                 
-                <View style={[
-                  styles.messageBubble,
-                  message.isUser ? styles.userMessageBubble : styles.aiMessageBubble
-                ]}>
-                  <Text style={styles.messageText}>
+                <View
+                  style={[
+                    styles.messageBubble,
+                    message.isUser ? styles.userMessageBubble : styles.aiMessageBubble,
+                    !message.isUser &&
+                      mode === 'light' && {
+                        backgroundColor: theme.colors.surface,
+                        borderWidth: 1,
+                        borderColor: theme.colors.border,
+                      },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.messageText,
+                      mode === 'light' && { color: theme.colors.text },
+                    ]}
+                  >
                     {message.text}
                   </Text>
                 </View>
@@ -287,32 +311,23 @@ export default function ChatScreen() {
         </ScrollView>
 
         <View style={styles.inputSection}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.quickActions}
-            contentContainerStyle={styles.quickActionsContent}
-          >
-            {QUICK_ACTIONS.map((action, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.quickActionButton}
-                onPress={() => handleQuickAction(action)}
-                disabled={isLoading}
-              >
-                <Text style={styles.quickActionText}>{action}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
           <View style={styles.inputContainer}>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => router.push('/(tabs)/scan')}
+            >
               <Camera size={24} color="#ffffff" opacity={0.8} />
             </TouchableOpacity>
 
             <View style={styles.inputWrapper}>
               <TextInput
-                style={styles.textInput}
+                style={[
+                  styles.textInput,
+                  mode === 'light' && {
+                    backgroundColor: theme.colors.surface,
+                    color: theme.colors.text,
+                  },
+                ]}
                 value={inputText}
                 onChangeText={setInputText}
                 placeholder="Ask about food or a meal..."
@@ -329,10 +344,6 @@ export default function ChatScreen() {
                 <ArrowUp size={24} color="#ffffff" />
               </TouchableOpacity>
             </View>
-
-            <TouchableOpacity style={styles.iconButton}>
-              <Mic size={24} color="#ffffff" opacity={0.8} />
-            </TouchableOpacity>
           </View>
         </View>
       </KeyboardAvoidingView>

@@ -369,7 +369,7 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
   },
   periodSelector: {
     flexDirection: 'row' as const,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Theme.colors.surface,
     margin: 16,
     marginBottom: 0,
     padding: 4,
@@ -384,8 +384,8 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     marginHorizontal: 2,
   },
   periodButtonActive: {
-    backgroundColor: '#1f2937',
-    shadowColor: '#000',
+    backgroundColor: Theme.colors.surface,
+    shadowColor: Theme.shadow.soft.shadowColor,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -404,13 +404,13 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     flex: 1,
   },
   card: {
-    backgroundColor: '#1f2937',
+    backgroundColor: Theme.colors.surface,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: Theme.colors.cardBorder,
   },
   cardHeader: {
     flexDirection: 'row' as const,
