@@ -100,9 +100,12 @@ export default function SettingsScreen() {
             <Text style={dynamic.editProfileButtonText}>Edit Profile</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[dynamic.editProfileButton, { marginTop: 10 }]} onPress={() => router.push('/subscription' as any)}>
-            <PieChart size={16} color={theme.colors.text} />
-            <Text style={dynamic.editProfileButtonText}>Pro & Premium Plans</Text>
+          <TouchableOpacity
+            style={[dynamic.editProfileButton, dynamic.premiumPlansButton]}
+            onPress={() => router.push('/subscription' as any)}
+          >
+            <Crown size={18} color="#FACC15" />
+            <Text style={dynamic.premiumPlansText}>Pro & Premium Plans</Text>
           </TouchableOpacity>
         </View>
 
@@ -425,6 +428,16 @@ const stylesWithTheme = (Theme: any) => StyleSheet.create({
     fontSize: 15,
     fontWeight: '600' as const,
     color: Theme.colors.text,
+  },
+  premiumPlansButton: {
+    marginTop: 10,
+    backgroundColor: '#1D4ED8',
+    borderColor: 'transparent',
+  },
+  premiumPlansText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#E5E7EB',
   },
   sectionContainer: {
     marginHorizontal: 16,

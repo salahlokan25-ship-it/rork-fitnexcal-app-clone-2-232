@@ -12,100 +12,34 @@ export default function LogInScreen() {
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Animation refs
-  const pulse = useRef(new Animated.Value(0)).current;
-  const logoScale = useRef(new Animated.Value(0.3)).current;
+  // Animation refs (logo + brand + form only)
+  const logoScale = useRef(new Animated.Value(0.85)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const brandOpacity = useRef(new Animated.Value(0)).current;
+  const brandTranslateY = useRef(new Animated.Value(16)).current;
   const formOpacity = useRef(new Animated.Value(0)).current;
-  const formTranslateY = useRef(new Animated.Value(30)).current;
-  
-  const particleAnim1 = useRef(new Animated.Value(0)).current;
-  const particleAnim2 = useRef(new Animated.Value(0)).current;
-  const particleAnim3 = useRef(new Animated.Value(0)).current;
-  const particleAnim4 = useRef(new Animated.Value(0)).current;
+  const formTranslateY = useRef(new Animated.Value(24)).current;
 
   useEffect(() => {
-    // Pulse animation for glow
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
-        Animated.timing(pulse, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
-      ])
-    );
-    loop.start();
-
-    // Particle animations
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(particleAnim1, {
-          toValue: 1,
-          duration: 3500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(particleAnim1, {
-          toValue: 0,
-          duration: 3500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-      ])
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(particleAnim2, {
-          toValue: 1,
-          duration: 4500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(particleAnim2, {
-          toValue: 0,
-          duration: 4500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-      ])
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(particleAnim3, {
-          toValue: 1,
-          duration: 5500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(particleAnim3, {
-          toValue: 0,
-          duration: 5500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-      ])
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(particleAnim4, {
-          toValue: 1,
-          duration: 4000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(particleAnim4, {
-          toValue: 0,
-          duration: 4000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-      ])
-    ).start();
-
-    // Entrance animation
+    // Entrance animation (similar sequence to splash):
+    // 1) Brand text fades/slides in
+    // 2) Logo scales/fades in
+    // 3) Form fades/slides up
     Animated.sequence([
+      Animated.parallel([
+        Animated.timing(brandOpacity, {
+          toValue: 1,
+          duration: 550,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: Platform.OS !== 'web',
+        }),
+        Animated.timing(brandTranslateY, {
+          toValue: 0,
+          duration: 550,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: Platform.OS !== 'web',
+        }),
+      ]),
       Animated.parallel([
         Animated.spring(logoScale, {
           toValue: 1,
@@ -120,30 +54,22 @@ export default function LogInScreen() {
           useNativeDriver: Platform.OS !== 'web',
         }),
       ]),
-      Animated.timing(brandOpacity, {
-        toValue: 1,
-        duration: 400,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: Platform.OS !== 'web',
-      }),
       Animated.parallel([
         Animated.timing(formOpacity, {
           toValue: 1,
-          duration: 500,
+          duration: 550,
           easing: Easing.out(Easing.quad),
           useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.timing(formTranslateY, {
           toValue: 0,
-          duration: 500,
+          duration: 550,
           easing: Easing.out(Easing.exp),
           useNativeDriver: Platform.OS !== 'web',
         }),
       ]),
     ]).start();
-
-    return () => loop.stop();
-  }, [pulse, logoScale, logoOpacity, brandOpacity, formOpacity, formTranslateY, particleAnim1, particleAnim2, particleAnim3, particleAnim4]);
+  }, [logoScale, logoOpacity, brandOpacity, brandTranslateY, formOpacity, formTranslateY]);
 
   const isValid = useMemo(() => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email.trim()) && password.trim().length >= 6, [email, password]);
 
@@ -169,53 +95,20 @@ export default function LogInScreen() {
 
   const styles = createStyles(theme);
 
-  const particle1Y = particleAnim1.interpolate({ inputRange: [0, 1], outputRange: [-60, 60] });
-  const particle2Y = particleAnim2.interpolate({ inputRange: [0, 1], outputRange: [60, -60] });
-  const particle3X = particleAnim3.interpolate({ inputRange: [0, 1], outputRange: [-50, 50] });
-  const particle4X = particleAnim4.interpolate({ inputRange: [0, 1], outputRange: [50, -50] });
-
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Animated particles background */}
-      <Animated.View style={[styles.particle, { top: '15%', left: '10%', transform: [{ translateY: particle1Y }], opacity: 0.25 }]} />
-      <Animated.View style={[styles.particle, { top: '50%', right: '15%', transform: [{ translateY: particle2Y }], opacity: 0.2 }]} />
-      <Animated.View style={[styles.particleLarge, { top: '30%', left: '75%', transform: [{ translateX: particle3X }], opacity: 0.15 }]} />
-      <Animated.View style={[styles.particleLarge, { bottom: '25%', left: '5%', transform: [{ translateX: particle4X }], opacity: 0.18 }]} />
-      <Animated.View style={[styles.particle, { bottom: '15%', right: '8%', transform: [{ translateY: particle1Y }], opacity: 0.22 }]} />
+      <View style={styles.overlay} />
 
       <View style={styles.center}>
-        <View style={styles.glowWrap} pointerEvents="none">
-          <Animated.View
-            style={[
-              styles.glow,
-              {
-                opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.8] }),
-                transform: [
-                  {
-                    scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.15] }),
-                  },
-                ],
-              },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.glow2,
-              {
-                opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.5] }),
-                transform: [
-                  {
-                    scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1.2] }),
-                  },
-                ],
-              },
-            ]}
-          />
-        </View>
         <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
-          <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/erlrdcwaclcficyu15p5z' }} style={styles.logo} resizeMode="contain" accessibilityLabel="FitnexCal logo" testID="login-logo" />
+          <Image
+            source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ao6dpw1jgh0i6gq6fseo0' }}
+            style={styles.logo}
+            resizeMode="contain"
+            accessibilityLabel="FitnexCal logo"
+            testID="login-logo"
+          />
         </Animated.View>
         <Animated.View style={{ opacity: brandOpacity }}>
           <Text style={styles.brand}>FitnexCal</Text>
@@ -266,50 +159,9 @@ export default function LogInScreen() {
 
 const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: '#0a0a0f', position: 'relative' },
+    root: { flex: 1, backgroundColor: '#020617', position: 'relative' },
+    overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(15,23,42,0.92)' },
     center: { alignItems: 'center', paddingTop: 56, paddingBottom: 16, zIndex: 10 },
-    glowWrap: { position: 'absolute', top: 18, width: '100%', height: 100, alignItems: 'center', justifyContent: 'center' },
-    glow: {
-      width: 240,
-      height: 70,
-      borderRadius: 40,
-      backgroundColor: '#4A90E2',
-      ...Platform.select({
-        ios: {
-          shadowColor: '#4A90E2',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.8,
-          shadowRadius: 30,
-        },
-        android: {
-          elevation: 25,
-        },
-        web: {
-          filter: 'blur(25px)',
-        },
-      }),
-    },
-    glow2: {
-      position: 'absolute',
-      width: 280,
-      height: 90,
-      borderRadius: 50,
-      backgroundColor: '#4A90E2',
-      ...Platform.select({
-        ios: {
-          shadowColor: '#4A90E2',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.5,
-          shadowRadius: 50,
-        },
-        android: {
-          elevation: 35,
-        },
-        web: {
-          filter: 'blur(45px)',
-        },
-      }),
-    },
     logo: { width: 100, height: 100, marginBottom: 12 },
     brand: { color: '#FFFFFF', fontSize: 32, fontWeight: '900', letterSpacing: 0.5 },
     formCard: { flex: 1, paddingTop: 32, paddingHorizontal: 20, zIndex: 10 },
@@ -349,30 +201,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
     disabled: { opacity: 0.5 },
     linkTouch: { alignItems: 'center', paddingVertical: 20 },
     linkText: { color: 'rgba(255, 255, 255, 0.8)', fontSize: 15, fontWeight: '600' },
-    particle: {
-      position: 'absolute',
-      width: 70,
-      height: 70,
-      borderRadius: 35,
-      backgroundColor: '#4A90E2',
-      zIndex: 1,
-      ...Platform.select({
-        web: {
-          filter: 'blur(25px)',
-        },
-      }),
-    },
-    particleLarge: {
-      position: 'absolute',
-      width: 110,
-      height: 110,
-      borderRadius: 55,
-      backgroundColor: '#6B5FCD',
-      zIndex: 1,
-      ...Platform.select({
-        web: {
-          filter: 'blur(35px)',
-        },
-      }),
-    },
+    particle: {},
+    particleLarge: {},
   });
